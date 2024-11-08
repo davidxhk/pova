@@ -1,6 +1,6 @@
 {
   "name": "pova",
-  "version": "0.0.0-1",
+  "version": "0.0.0-2",
   "description": "A plugin-oriented validation framework for building flexible and extensible validation pipelines.",
   "main": "index.js",
   "scripts": {
