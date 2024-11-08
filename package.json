@@ -1,0 +1,30 @@
+{
+  "name": "pova",
+  "version": "0.0.0",
+  "description": "A plugin-oriented validation framework for building flexible and extensible validation pipelines.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo Error: no test specified && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidxhk/pova.git"
+  },
+  "keywords": [
+    "validation",
+    "input validation",
+    "form validation",
+    "custom validation",
+    "validation rules",
+    "validation library",
+    "validation plugins",
+    "validation pipeline",
+    "plugin oriented"
+  ],
+  "author": "David Xie",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/davidxhk/pova/issues"
+  },
+  "homepage": "https://github.com/davidxhk/pova#readme"
+}
