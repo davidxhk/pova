@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "📂 checkout repository"
+        uses: actions/checkout@v4
+      
+      - name: "🚀 setup node"
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      
+      - name: "🛠️ install dependencies"
+        run: npm ci
+
+      - name: "📦 build package"
+        run: npm run build --if-present
+
+      - name: "🧪 run tests"
+        run: npm test
+
+      - name: "📤 release package"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release
