@@ -13,5 +13,9 @@ export default antfu(
       indent: 2,
       quotes: "double",
     },
+    rules: {
+      "ts/method-signature-style": "off",
+      "ts/no-unsafe-declaration-merging": "off",
+    },
   },
 )
