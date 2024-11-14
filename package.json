@@ -22,5 +22,8 @@
     "validation plugins",
     "validation pipeline",
     "plugin oriented"
-  ]
+  ],
+  "devDependencies": {
+    "@davidxhk/prettier-config": "^1.0.0"
+  }
 }
