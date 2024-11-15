@@ -17,15 +17,7 @@ export interface ValidationResult {
   message: string
 }
 
-export interface ValidationOptions {
-  exitOnPending?: boolean
-  resetOnStart?: boolean
-}
-
-export const EMPTY_RESULT: Readonly<ValidationResult> = {
-  state: "",
-  message: "",
-}
+export const EMPTY_RESULT = Object.freeze<ValidationResult>({ state: "", message: "" })
 
 export type ValidationEvent = CustomEvent<ValidationResult>
 
@@ -62,14 +54,14 @@ export interface Validator {
 export class Validator extends EventTarget {
   readonly fixtures: ValidationFixture[]
   readonly plugins: ValidationPlugin[]
-  private result: ValidationResult
-  private promise: AbortablePromise<ValidationResult | void> | null
+  result: ValidationResult
+  promise: AbortablePromise<ValidationResult | void> | null
 
   constructor(fixtures?: ValidationFixture[], plugins?: ValidationPlugin[]) {
     super()
     this.fixtures = fixtures || []
     this.plugins = plugins || []
-    this.result = { ...EMPTY_RESULT }
+    this.result = EMPTY_RESULT
     this.promise = null
   }
 
@@ -115,21 +107,20 @@ export class Validator extends EventTarget {
     this.dispatchEvent(new CustomEvent("validation", { detail: result }))
   }
 
-  async validate(
-    trigger: string = "",
-    options?: ValidationOptions,
-  ): Promise<ValidationResult> {
-    if (options?.exitOnPending && this.result.state === "pending") {
-      return this.result
+  reset(): void {
+    if (this.promise) {
+      this.promise.abort("validation reset")
     }
+
+    this.setResult(EMPTY_RESULT)
+  }
+
+  async validate(trigger: string = ""): Promise<ValidationResult> {
     if (this.promise) {
       this.promise.abort(`${trigger} revalidation`)
     }
-    if (options?.resetOnStart) {
-      this.setResult({ ...EMPTY_RESULT })
-    }
 
-    let result: ValidationResult = { ...this.result }
+    let result = this.result
     for (const plugin of this.plugins) {
       try {
         const controller = new AbortController()

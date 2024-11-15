@@ -29,9 +29,7 @@ describe("class Validator", () => {
     })
 
     it("initializes with an empty result and a null promise", () => {
-      // @ts-expect-error internal property not supported yet
       expect(validator.result).toMatchObject(EMPTY_RESULT)
-      // @ts-expect-error internal property not supported yet
       expect(validator.promise).toBeNull()
     })
   })
@@ -121,43 +119,42 @@ describe("class Validator", () => {
 
       validator.setResult(result)
 
-      // @ts-expect-error internal property not supported yet
       expect(validator.result).toBe(result)
       expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: result }))
     })
   })
 
-  describe("async validate", () => {
-    it("exits before running any plugins if the last state is 'pending' and exitOnPending is true", () => {
-      validator.setResult({ state: "pending", message: "" })
-      const plugin = vi.fn(() => {})
-      validator.addPlugin(plugin)
-
-      validator.validate("test", { exitOnPending: true })
-
-      expect(plugin).not.toHaveBeenCalled()
-    })
-
+  describe("reset", () => {
     it("aborts any currently running plugin", async () => {
       validator.addPlugin(() => new Promise(resolve => setTimeout(resolve, 10)))
       validator.validate()
-      // @ts-expect-error internal property not supported yet
+      const signal = validator.promise!.signal
+
+      validator.reset()
+
+      expect(signal.aborted).toBe(true)
+    })
+
+    it("sets an empty result and dispatches a validation event", () => {
+      const listener = vi.fn()
+      validator.addEventListener("validation", listener)
+
+      validator.reset()
+
+      expect(validator.result).toBe(EMPTY_RESULT)
+      expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: EMPTY_RESULT }))
+    })
+  })
+
+  describe("async validate", () => {
+    it("aborts any currently running plugin", async () => {
+      validator.addPlugin(() => new Promise(resolve => setTimeout(resolve, 10)))
+      validator.validate()
       const signal = validator.promise!.signal
 
       validator.validate()
 
       expect(signal.aborted).toBe(true)
-    })
-
-    it("dispatches an empty result before running any plugins if resetOnStart is true", () => {
-      const listener = vi.fn()
-      validator.addEventListener("validation", listener)
-
-      validator.validate("test", { resetOnStart: true })
-
-      // @ts-expect-error internal property not supported yet
-      expect(validator.result).toMatchObject(EMPTY_RESULT)
-      expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: EMPTY_RESULT }))
     })
 
     it("resolves all plugins sequentially", async () => {
@@ -174,7 +171,6 @@ describe("class Validator", () => {
 
       validator.validate()
 
-      // @ts-expect-error internal property not supported yet
       expect(validator.promise).toStrictEqual(expect.any(AbortablePromise))
     })
 
@@ -260,7 +256,6 @@ describe("class Validator", () => {
       const result = await validator.validate()
 
       expect(result).toMatchObject({ state: "sixth", message: "" })
-      // @ts-expect-error internal property not supported yet
       expect(validator.result).toBe(result)
       expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: result }))
     })
@@ -268,8 +263,8 @@ describe("class Validator", () => {
     it("returns a result with an aborted state when a plugin is aborted", async () => {
       validator.addPlugin(() => new Promise(resolve => setTimeout(resolve, 10)))
       const validation = validator.validate()
-
       validator.validate()
+
       const result = await validation
 
       expect(result).toMatchObject({ state: "aborted" })
