@@ -112,6 +112,14 @@ export class Validator extends EventTarget {
     this.dispatchEvent(new CustomEvent("validation", { detail: result }))
   }
 
+  reset(): void {
+    if (this.promise) {
+      this.promise.abort("validation reset")
+    }
+
+    this.setResult(EMPTY_RESULT)
+  }
+
   async validate(
     trigger: string = "",
     options?: ValidationOptions,
