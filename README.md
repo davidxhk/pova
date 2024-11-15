@@ -113,21 +113,21 @@ validator.addEventListener("validation", (event) => {
 
 - **Context**: When a new validation process begins, any plugin that is currently running will be aborted. The abort signal can be used to implement **debouncing**.
 
-- **Debouncing**\*: Before expensive operations such as server requests, add a *debounce delay*, then check the abort signal. If the signal is aborted, skip the operation.
+- **Debouncing**\*: Before expensive operations such as server requests, add a *debounce delay*, then check the abort signal. If the signal has been aborted, skip the operation.
 
   \* See [this example](#example-debouncing-server-requests) to learn more.
 
 ### Event-Driven State Management
 
-- **Definition**: Event-driven state management propagates state updates through a system via custom events that carry the latest state, delegating the updates to consumers (components who have added event listeners to the event target) to handle according to their specific needs.
+- **Definition**: Event-driven state management is a way of handling state updates by sending out custom events whenever the state changes. Components listen for these events to receive the latest state and decide how to respond.
 
 - **Benefits**:
 
-  1. **Efficiency**: Ensures all dependent components are automatically updated when the state changes, eliminating the need for manual updates or complex global state management.
+  1. **Efficiency**: No complex state management required. Components that rely on the validation state are automatically updated.
 
-  2. **Performance**: Minimizes unnecessary re-renders by triggering updates only in components directly affected by the state change.
+  2. **Performance**: Minimize unnecessary re-renders. Only components that rely on the validation state are updated.
 
-  3. **Flexibility**: Allows multiple consumers to handle state changes independently, enabling custom behaviors without introducing tight coupling between components.
+  3. **Flexibility**: Build rich validation interfaces with highly decoupled components. Components can handle validation state updates in their own way without affecting other components.
 
 ## Example: Asynchronous Validation
 
@@ -239,7 +239,7 @@ What changed in this example:
 
 - **Delay:** A debounce delay of 500ms is introduced before the server request to give the user time to stop typing.
 
-- **Early exit:** If the user inputs during the delay, the signal is aborted, allowing the plugin to exit early and skip the server request.
+- **Early exit:** If the user inputs during the delay, the signal will be aborted, allowing the plugin to exit early and skip the server request.
 
 ## Conclusion
 
