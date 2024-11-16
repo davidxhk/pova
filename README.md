@@ -26,7 +26,6 @@ Register fixture(s):
 ```javascript
 const usernameInput = document.getElementById("username")
 
-// Register HTMLInputElement as fixture
 validator.addFixture(usernameInput)
 ```
 
@@ -34,15 +33,18 @@ Define validation logic within plugin(s):
 
 ```javascript
 validator.addPlugin((validator, trigger, result) => {
+  // Exit if state has been determined
   if (result.state) {
-    return // Exit if state has been determined
+    return
   }
 
+  // Access fixture
   const fixture = validator.findFixture("username")
   if (!fixture) {
     throw new Error("Fixture not found")
   }
 
+  // Check username length
   const username = fixture.value
   if (username.length < 3) {
     return { state: "invalid", message: "Username must be at least 3 characters." }
@@ -55,16 +57,17 @@ Use event listeners to trigger validations and respond to changes in validation 
 ```javascript
 // Validate on input event
 usernameInput.addEventListener("input", () => {
-  validator.validate("input", {
-    resetOnStart: true // Dispatch empty result before validating
-  })
+  // Clear previous result
+  validator.reset()
+
+  // Trigger validation
+  validator.validate("input")
 })
 
-const submitButton = document.getElementById("submit")
-
-// Disable submit button on invalid state
+// Update email message on validation
+const usernameMsg = document.getElementById("username-msg")
 validator.addEventListener("validation", (event) => {
-  submitButton.disabled = event.detail.state === "invalid"
+  usernameMsg.innerHTML = event.detail.message
 })
 ```
 
@@ -152,16 +155,16 @@ validator.addPlugin(async (validator, trigger, result, signal) => {
     throw new Error("Fixture not found")
   }
 
-  // Basic email format validation
+  // Check email format using regex
   const email = fixture.value
   if (!EMAIL_REGEX.test(email)) {
     return { state: "invalid", message: "Enter a valid email address." }
   }
 
-  // Dispatch pending result to provide user feedback
+  // Display pending message
   validator.setResult({ state: "pending", message: "Checking availability..." })
 
-  // Server request to check email availability
+  // Check email availability with server request
   const response = await fetch(`/check-availability?email=${email}`).then(res => res.json())
   if (!response.isAvailable) {
     return { state: "invalid", message: "Email is already in use." }
@@ -170,19 +173,26 @@ validator.addPlugin(async (validator, trigger, result, signal) => {
   return { state: "valid", message: "Email is available." }
 })
 
-// Validate on input event
 emailInput.addEventListener("input", () => {
-  validator.validate("input", { resetOnStart: true })
+  validator.reset()
+  validator.validate("input")
+})
+
+const emailMsg = document.getElementById("email-msg")
+validator.addEventListener("validation", (event) => {
+  emailMsg.innerHTML = event.detail.message
 })
 ```
 
 In this example:
 
-- **Fixture:** The email input is registered as a fixture.
+- **Fixture**: The email input is registered as a fixture.
 
-- **Plugin:** A plugin is added to validate the email format and make an async server request to check if the email is available.
+- **Plugin**: A plugin is added to validate the email format and make a server request to check if the email is available.
 
-- **Event binding:** The validation is triggered on input events, allowing real-time validation feedback.
+- **Validation trigger**: Input events are used to trigger validation to enable real-time feedback.
+
+- **State management**: The email message is updated on validation to provide immediate feedback.
 
 ## Example: Debouncing Server Requests
 
@@ -231,15 +241,21 @@ validator.addPlugin(async (validator, trigger, result, signal) => {
 })
 
 emailInput.addEventListener("input", () => {
-  validator.validate("input", { resetOnStart: true })
+  validator.reset()
+  validator.validate("input")
+})
+
+const emailMsg = document.getElementById("email-msg")
+validator.addEventListener("validation", (event) => {
+  emailMsg.innerHTML = event.detail.message
 })
 ```
 
 What changed in this example:
 
-- **Delay:** A debounce delay of 500ms is introduced before the server request to give the user time to stop typing.
+- **Delay**: A debounce delay of 500ms is introduced before the server request to give the user time to stop typing.
 
-- **Early exit:** If the user inputs during the delay, the signal will be aborted, allowing the plugin to exit early and skip the server request.
+- **Early exit**: If the user inputs during the delay, the signal will be aborted, allowing the plugin to exit early and skip the server request.
 
 ## Conclusion
 
