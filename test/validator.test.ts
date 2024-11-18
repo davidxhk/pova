@@ -80,6 +80,15 @@ describe("class Validator", () => {
       expect(validator.fixtures).not.toContain(fixture)
     })
 
+    it("removes a fixture from the fixtures list by index", () => {
+      const fixture: ValidationFixture = { name: "email", value: "test@example.com" }
+      validator.addFixture(fixture)
+
+      validator.removeFixture(0)
+
+      expect(validator.fixtures).not.toContain(fixture)
+    })
+
     it("removes a fixture from the fixtures list by object reference", () => {
       const fixture: ValidationFixture = { name: "email", value: "test@example.com" }
       validator.addFixture(fixture)
