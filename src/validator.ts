@@ -70,11 +70,11 @@ export class Validator extends EventTarget {
   }
 
   findFixture(name: string | number): ValidationFixture | undefined {
-    if (typeof name === "number") {
-      return this.fixtures[name]
-    }
-    else {
+    if (typeof name === "string") {
       return this.fixtures.find(fixture => fixture.name === name)
+    }
+    else if (typeof name === "number") {
+      return this.fixtures[name]
     }
   }
 
