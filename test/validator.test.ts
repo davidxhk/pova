@@ -2,7 +2,7 @@ import type { ValidationFixture, ValidationResult } from "../src/validator"
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { AbortablePromise } from "../src/utils"
-import { EMPTY_RESULT, Validator } from "../src/validator"
+import { Validator } from "../src/validator"
 
 describe("class Validator", () => {
   let validator: Validator
@@ -28,8 +28,8 @@ describe("class Validator", () => {
       expect(validator.plugins).toBe(plugins)
     })
 
-    it("initializes with an empty result and a null promise", () => {
-      expect(validator.result).toMatchObject(EMPTY_RESULT)
+    it("initializes with a null result and a null promise", () => {
+      expect(validator.result).toBeNull()
       expect(validator.promise).toBeNull()
     })
   })
@@ -89,7 +89,7 @@ describe("class Validator", () => {
       expect(validator.fixtures).not.toContain(fixture)
     })
 
-    it("removes a fixture from the fixtures list by object reference", () => {
+    it("removes a fixture from the fixtures list by reference", () => {
       const fixture: ValidationFixture = { name: "email", value: "test@example.com" }
       validator.addFixture(fixture)
 
@@ -124,7 +124,7 @@ describe("class Validator", () => {
     it("updates the result and dispatches a validation event", () => {
       const listener = vi.fn()
       validator.addEventListener("validation", listener)
-      const result: ValidationResult = { state: "valid", message: "" }
+      const result: ValidationResult = { state: "valid" }
 
       validator.setResult(result)
 
@@ -144,14 +144,14 @@ describe("class Validator", () => {
       expect(signal.aborted).toBe(true)
     })
 
-    it("sets an empty result and dispatches a validation event", () => {
+    it("sets a null result and dispatches a validation event", () => {
       const listener = vi.fn()
       validator.addEventListener("validation", listener)
 
       validator.reset()
 
-      expect(validator.result).toBe(EMPTY_RESULT)
-      expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: EMPTY_RESULT }))
+      expect(validator.result).toBeNull()
+      expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: null }))
     })
   })
 
@@ -183,79 +183,69 @@ describe("class Validator", () => {
       expect(validator.promise).toStrictEqual(expect.any(AbortablePromise))
     })
 
-    it("passes the validator into each plugin", async () => {
-      const plugins = Array.from([() => {}, () => {}, () => {}], vi.fn)
-      plugins.forEach(plugin => validator.addPlugin(plugin))
-
-      await validator.validate()
-
-      plugins.forEach(plugin => expect(plugin).toHaveBeenCalledWith(validator, expect.anything(), expect.anything(), expect.anything()))
-    })
-
-    it("passes the trigger into each plugin", async () => {
+    it("passes the validator, trigger, a result, and an abort signal into each plugin", async () => {
       const plugins = Array.from([() => {}, () => {}, () => {}], vi.fn)
       plugins.forEach(plugin => validator.addPlugin(plugin))
       const trigger = "test"
 
       await validator.validate(trigger)
 
-      plugins.forEach(plugin => expect(plugin).toHaveBeenCalledWith(expect.anything(), trigger, expect.anything(), expect.anything()))
+      plugins.forEach(plugin => expect(plugin).toHaveBeenCalledWith(validator, trigger, expect.any(Object), expect.any(AbortSignal)))
+    })
+
+    it("passes a null result into the first plugin if a result has not been dispatched", async () => {
+      const plugin = vi.fn(() => {})
+      validator.addPlugin(plugin)
+
+      await validator.validate()
+
+      expect(plugin).toHaveBeenCalledWith(validator, undefined, null, expect.any(AbortSignal))
     })
 
     it("passes the result that was last dispatched into the first plugin", async () => {
-      validator.setResult({ state: "initial", message: "" })
+      validator.setResult({ state: "initial" })
       const plugin = vi.fn(() => {})
       validator.addPlugin(plugin)
 
       await validator.validate()
 
-      expect(plugin).toHaveBeenCalledWith(expect.anything(), expect.anything(), { state: "initial", message: "" }, expect.anything())
-    })
-
-    it("passes an empty result into the first plugin if a result has not been dispatched", async () => {
-      const plugin = vi.fn(() => {})
-      validator.addPlugin(plugin)
-
-      await validator.validate()
-
-      expect(plugin).toHaveBeenCalledWith(expect.anything(), expect.anything(), EMPTY_RESULT, expect.anything())
+      expect(plugin).toHaveBeenCalledWith(validator, undefined, { state: "initial" }, expect.any(AbortSignal))
     })
 
     it("passes the result that was last returned into the second plugin onwards", async () => {
       const plugins = Array.from([
-        () => ({ state: "first", message: "" }),
+        () => ({ state: "first" }),
         () => {},
-        () => ({ state: "third", message: "" }),
+        () => ({ state: "third" }),
         () => {},
         () => {},
-        () => ({ state: "sixth", message: "" }),
+        () => ({ state: "sixth" }),
         () => {},
       ], vi.fn)
       plugins.forEach(plugin => validator.addPlugin(plugin))
 
       await validator.validate()
 
-      const expected = ["", "first", "first", "third", "third", "third", "sixth"]
-      plugins.forEach((plugin, index) => expect(plugin).toHaveBeenCalledWith(expect.anything(), expect.anything(), { state: expected[index], message: "" }, expect.anything()))
-    })
-
-    it("passes an abort signal into each plugin", async () => {
-      const plugins = Array.from([() => {}, () => {}, () => {}], vi.fn)
-      plugins.forEach(plugin => validator.addPlugin(plugin))
-
-      await validator.validate()
-
-      plugins.forEach(plugin => expect(plugin).toHaveBeenCalledWith(expect.anything(), expect.anything(), expect.anything(), expect.any(AbortSignal)))
+      const expected = [
+        null,
+        { state: "first" },
+        { state: "first" },
+        { state: "third" },
+        { state: "third" },
+        { state: "third" },
+        { state: "sixth" },
+      ]
+      plugins.forEach((plugin, index) => expect(plugin).toHaveBeenCalledWith(validator, undefined, expected[index], expect.any(AbortSignal)))
     })
 
     it("dispatches and returns the result that was last returned", async () => {
       const plugins = [
-        () => ({ state: "first", message: "" }),
+        () => ({ state: "first" }),
         () => {},
-        () => ({ state: "third", message: "" }),
+        () => ({ state: "third" }),
         () => {},
         () => {},
-        () => ({ state: "sixth", message: "" }),
+        () => ({ state: "sixth" }),
         () => {},
       ]
       plugins.forEach(plugin => validator.addPlugin(plugin))
@@ -264,7 +254,7 @@ describe("class Validator", () => {
 
       const result = await validator.validate()
 
-      expect(result).toMatchObject({ state: "sixth", message: "" })
+      expect(result).toMatchObject({ state: "sixth" })
       expect(validator.result).toBe(result)
       expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: result }))
     })
@@ -279,7 +269,7 @@ describe("class Validator", () => {
       expect(result).toMatchObject({ state: "aborted" })
     })
 
-    it("returns a result with an error state when a plugin throws an error object", async () => {
+    it("returns a result with an error state when a plugin throws an error", async () => {
       validator.addPlugin(() => {
         throw new Error("test")
       })
@@ -289,7 +279,7 @@ describe("class Validator", () => {
       expect(result).toMatchObject({ state: "error" })
     })
 
-    it("returns a result with an unknown state when a plugin throws a non-error object", async () => {
+    it("returns a result with an unknown state when a plugin throws a non-error", async () => {
       validator.addPlugin(() => {
         // eslint-disable-next-line no-throw-literal
         throw "test"
