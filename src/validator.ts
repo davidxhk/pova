@@ -5,19 +5,22 @@ export interface ValidationFixture {
   value: string
 }
 
+export type Promisable<T> = T | PromiseLike<T>
+
 export type ValidationPlugin = (
   validator: Validator,
-  trigger: string,
-  result: ValidationResult,
+  trigger: string | undefined,
+  result: ValidationResult | null,
   signal: AbortSignal
-) => ValidationResult | void | Promise<ValidationResult | void>
+) => Promisable<ValidationResult | void>
+
+export type JSONValue = string | number | boolean | JSONValue[] | { [key: string]: JSONValue }
 
 export interface ValidationResult {
   state: string
-  message: string
+  message?: string
+  [key: string]: JSONValue | undefined
 }
-
-export const EMPTY_RESULT = Object.freeze<ValidationResult>({ state: "", message: "" })
 
 export type ValidationEvent = CustomEvent<ValidationResult>
 
@@ -54,14 +57,14 @@ export interface Validator {
 export class Validator extends EventTarget {
   readonly fixtures: ValidationFixture[]
   readonly plugins: ValidationPlugin[]
-  result: ValidationResult
+  result: ValidationResult | null
   promise: AbortablePromise<ValidationResult | void> | null
 
-  constructor(fixtures?: ValidationFixture[], plugins?: ValidationPlugin[]) {
+  constructor(fixtures: ValidationFixture[] = [], plugins: ValidationPlugin[] = []) {
     super()
-    this.fixtures = fixtures || []
-    this.plugins = plugins || []
-    this.result = EMPTY_RESULT
+    this.fixtures = fixtures
+    this.plugins = plugins
+    this.result = null
     this.promise = null
   }
 
@@ -107,7 +110,7 @@ export class Validator extends EventTarget {
     }
   }
 
-  setResult(result: ValidationResult): void {
+  setResult(result: ValidationResult | null): void {
     this.result = result
     this.dispatchEvent(new CustomEvent("validation", { detail: result }))
   }
@@ -117,10 +120,10 @@ export class Validator extends EventTarget {
       this.promise.abort("validation reset")
     }
 
-    this.setResult(EMPTY_RESULT)
+    this.setResult(null)
   }
 
-  async validate(trigger: string = ""): Promise<ValidationResult> {
+  async validate(trigger?: string): Promise<ValidationResult | null> {
     if (this.promise) {
       this.promise.abort(`${trigger} revalidation`)
     }
