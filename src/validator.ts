@@ -5,7 +5,7 @@ export interface ValidationFixture {
   value: string
 }
 
-export type Promisable<T> = T | PromiseLike<T>
+type Promisable<T> = T | PromiseLike<T>
 
 export type ValidationPlugin = (
   validator: Validator,
@@ -14,7 +14,7 @@ export type ValidationPlugin = (
   signal: AbortSignal
 ) => Promisable<ValidationResult | void>
 
-export type JSONValue = string | number | boolean | JSONValue[] | { [key: string]: JSONValue }
+type JSONValue = string | number | boolean | JSONValue[] | { [key: string]: JSONValue }
 
 export interface ValidationResult {
   state: string
