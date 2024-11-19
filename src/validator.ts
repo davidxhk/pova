@@ -58,10 +58,10 @@ export class Validator extends EventTarget {
   result: ValidationResult | null
   promise: AbortablePromise<ValidationResult | void> | null
 
-  constructor(fixtures?: ValidationFixture[], plugins?: ValidationPlugin[]) {
+  constructor(fixtures: ValidationFixture[] = [], plugins: ValidationPlugin[] = []) {
     super()
-    this.fixtures = fixtures || []
-    this.plugins = plugins || []
+    this.fixtures = fixtures
+    this.plugins = plugins
     this.result = null
     this.promise = null
   }
