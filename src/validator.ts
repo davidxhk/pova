@@ -5,12 +5,14 @@ export interface ValidationFixture {
   value: string
 }
 
+export type Promisable<T> = T | PromiseLike<T>
+
 export type ValidationPlugin = (
   validator: Validator,
   trigger: string | undefined,
   result: ValidationResult | null,
   signal: AbortSignal
-) => ValidationResult | void | Promise<ValidationResult | void>
+) => Promisable<ValidationResult | void>
 
 export type JSONValue = string | number | boolean | JSONValue[] | { [key: string]: JSONValue }
 
