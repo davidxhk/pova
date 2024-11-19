@@ -14,7 +14,7 @@ export type ValidationPlugin = (
 
 export interface ValidationResult {
   state: string
-  message: string
+  message?: string
 }
 
 export type ValidationEvent = CustomEvent<ValidationResult>
