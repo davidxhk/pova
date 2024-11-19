@@ -7,7 +7,7 @@ export interface ValidationFixture {
 
 export type ValidationPlugin = (
   validator: Validator,
-  trigger: string,
+  trigger: string | undefined,
   result: ValidationResult,
   signal: AbortSignal
 ) => ValidationResult | void | Promise<ValidationResult | void>
@@ -120,7 +120,7 @@ export class Validator extends EventTarget {
     this.setResult(EMPTY_RESULT)
   }
 
-  async validate(trigger: string = ""): Promise<ValidationResult> {
+  async validate(trigger?: string): Promise<ValidationResult> {
     if (this.promise) {
       this.promise.abort(`${trigger} revalidation`)
     }
