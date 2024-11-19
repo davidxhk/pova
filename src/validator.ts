@@ -12,9 +12,12 @@ export type ValidationPlugin = (
   signal: AbortSignal
 ) => ValidationResult | void | Promise<ValidationResult | void>
 
+export type JSONValue = string | number | boolean | JSONValue[] | { [key: string]: JSONValue }
+
 export interface ValidationResult {
   state: string
   message?: string
+  [key: string]: JSONValue | undefined
 }
 
 export type ValidationEvent = CustomEvent<ValidationResult>
