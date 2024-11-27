@@ -171,7 +171,7 @@ validator.addPlugin(async (validator, trigger, result, signal) => {
   }
 
   // Display pending message
-  validator.setResult({ state: "pending", message: "Checking availability..." })
+  validator.dispatchResult({ state: "pending", message: "Checking availability..." })
 
   // Check email availability with server request
   const response = await fetch(`/check-availability?email=${email}`).then(res => res.json())
@@ -239,7 +239,7 @@ validator.addPlugin(async (validator, trigger, result, signal) => {
     return
   }
 
-  validator.setResult({ state: "pending", message: "Checking availability..." })
+  validator.dispatchResult({ state: "pending", message: "Checking availability..." })
 
   const response = await fetch(`/check-availability?email=${email}`).then(res => res.json())
   if (!response.isAvailable) {
