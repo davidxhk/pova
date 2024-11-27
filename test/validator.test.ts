@@ -1,7 +1,7 @@
 import type { ValidationFixture, ValidationResult } from "../src/validator"
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { AbortablePromise } from "../src/utils"
+import { AbortablePromise, AbortError } from "../src/utils"
 import { Validator } from "../src/validator"
 
 describe("class Validator", () => {
@@ -120,16 +120,46 @@ describe("class Validator", () => {
     })
   })
 
-  describe("setResult", () => {
-    it("updates the result and dispatches a validation event", () => {
+  describe("dispatchResult", () => {
+    it("updates the result", () => {
+      const result: ValidationResult = { state: "valid" }
+
+      validator.dispatchResult(result)
+
+      expect(validator.result).toBe(result)
+    })
+
+    it("dispatches a validation event", () => {
       const listener = vi.fn()
       validator.addEventListener("validation", listener)
       const result: ValidationResult = { state: "valid" }
 
-      validator.setResult(result)
+      validator.dispatchResult(result)
 
-      expect(validator.result).toBe(result)
       expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: result }))
+    })
+  })
+
+  describe("abort", () => {
+    it("aborts any currently running plugin", async () => {
+      validator.addPlugin(() => new Promise(resolve => setTimeout(resolve, 10)))
+      validator.validate()
+      const signal = validator.promise!.signal
+
+      validator.abort()
+
+      expect(signal.aborted).toBe(true)
+    })
+
+    it("uses the specified reason when provided", async () => {
+      validator.addPlugin(() => new Promise(resolve => setTimeout(resolve, 10)))
+      validator.validate()
+      const signal = validator.promise!.signal
+      const reason = "test"
+
+      validator.abort(reason)
+
+      expect(signal.reason).toBe(reason)
     })
   })
 
@@ -144,7 +174,7 @@ describe("class Validator", () => {
       expect(signal.aborted).toBe(true)
     })
 
-    it("sets a null result and dispatches a validation event", () => {
+    it("dispatches a null result", () => {
       const listener = vi.fn()
       validator.addEventListener("validation", listener)
 
@@ -203,7 +233,7 @@ describe("class Validator", () => {
     })
 
     it("passes the result that was last dispatched into the first plugin", async () => {
-      validator.setResult({ state: "initial" })
+      validator.dispatchResult({ state: "initial" })
       const plugin = vi.fn(() => {})
       validator.addPlugin(plugin)
 

@@ -110,24 +110,24 @@ export class Validator extends EventTarget {
     }
   }
 
-  setResult(result: ValidationResult | null): void {
+  dispatchResult(result: ValidationResult | null): void {
     this.result = result
     this.dispatchEvent(new CustomEvent("validation", { detail: result }))
   }
 
-  reset(): void {
+  abort(reason?: string): void {
     if (this.promise) {
-      this.promise.abort("validation reset")
+      this.promise.abort(reason)
     }
+  }
 
-    this.setResult(null)
+  reset(): void {
+    this.abort("validation reset")
+    this.dispatchResult(null)
   }
 
   async validate(trigger?: string): Promise<ValidationResult | null> {
-    if (this.promise) {
-      this.promise.abort(`${trigger} revalidation`)
-    }
-
+    this.abort(`${trigger} revalidation`)
     let result = this.result
     for (const plugin of this.plugins) {
       try {
@@ -149,8 +149,7 @@ export class Validator extends EventTarget {
         this.promise = null
       }
     }
-
-    this.setResult(result)
+    this.dispatchResult(result)
     return result
   }
 }
