@@ -121,14 +121,21 @@ describe("class Validator", () => {
   })
 
   describe("dispatchResult", () => {
-    it("updates the result and dispatches a validation event", () => {
+    it("updates the result", () => {
+      const result: ValidationResult = { state: "valid" }
+
+      validator.dispatchResult(result)
+
+      expect(validator.result).toBe(result)
+    })
+
+    it("dispatches a validation event", () => {
       const listener = vi.fn()
       validator.addEventListener("validation", listener)
       const result: ValidationResult = { state: "valid" }
 
       validator.dispatchResult(result)
 
-      expect(validator.result).toBe(result)
       expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: result }))
     })
   })
@@ -167,7 +174,7 @@ describe("class Validator", () => {
       expect(signal.aborted).toBe(true)
     })
 
-    it("sets a null result and dispatches a validation event", () => {
+    it("dispatches a null result", () => {
       const listener = vi.fn()
       validator.addEventListener("validation", listener)
 
