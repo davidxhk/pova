@@ -120,13 +120,13 @@ describe("class Validator", () => {
     })
   })
 
-  describe("setResult", () => {
+  describe("dispatchResult", () => {
     it("updates the result and dispatches a validation event", () => {
       const listener = vi.fn()
       validator.addEventListener("validation", listener)
       const result: ValidationResult = { state: "valid" }
 
-      validator.setResult(result)
+      validator.dispatchResult(result)
 
       expect(validator.result).toBe(result)
       expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: result }))
@@ -203,7 +203,7 @@ describe("class Validator", () => {
     })
 
     it("passes the result that was last dispatched into the first plugin", async () => {
-      validator.setResult({ state: "initial" })
+      validator.dispatchResult({ state: "initial" })
       const plugin = vi.fn(() => {})
       validator.addPlugin(plugin)
 
