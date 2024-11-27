@@ -1,7 +1,7 @@
 import type { ValidationFixture, ValidationResult } from "../src/validator"
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { AbortablePromise } from "../src/utils"
+import { AbortablePromise, AbortError } from "../src/utils"
 import { Validator } from "../src/validator"
 
 describe("class Validator", () => {
@@ -130,6 +130,29 @@ describe("class Validator", () => {
 
       expect(validator.result).toBe(result)
       expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: result }))
+    })
+  })
+
+  describe("abort", () => {
+    it("aborts any currently running plugin", async () => {
+      validator.addPlugin(() => new Promise(resolve => setTimeout(resolve, 10)))
+      validator.validate()
+      const signal = validator.promise!.signal
+
+      validator.abort()
+
+      expect(signal.aborted).toBe(true)
+    })
+
+    it("uses the specified reason when provided", async () => {
+      validator.addPlugin(() => new Promise(resolve => setTimeout(resolve, 10)))
+      validator.validate()
+      const signal = validator.promise!.signal
+      const reason = "test"
+
+      validator.abort(reason)
+
+      expect(signal.reason).toBe(reason)
     })
   })
 
