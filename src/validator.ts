@@ -132,15 +132,7 @@ export class Validator extends EventTarget {
     let result = this[$result]
     for (const plugin of this[$plugins]) {
       try {
-        this[$promise] = new AbortablePromise(async (resolve, reject, controller) => {
-          try {
-            const pluginResult = await plugin(this, trigger, result, controller.signal)
-            resolve(pluginResult)
-          }
-          catch (error) {
-            reject(error)
-          }
-        })
+        this[$promise] = resolveValidationPlugin(plugin, this, trigger, result)
         result = (await this[$promise]) || result
       }
       catch (error) {
@@ -154,6 +146,18 @@ export class Validator extends EventTarget {
     this.dispatchResult(result)
     return result
   }
+}
+
+function resolveValidationPlugin(plugin: ValidationPlugin, validator: Validator, trigger: string | undefined, result: ValidationResult | null): AbortablePromise<ValidationResult | void> {
+  return new AbortablePromise(async (resolve, reject, controller) => {
+    try {
+      const pluginResult = await plugin(validator, trigger, result, controller.signal)
+      resolve(pluginResult)
+    }
+    catch (error) {
+      reject(error)
+    }
+  })
 }
 
 function handleValidationError(error: any): ValidationResult {
