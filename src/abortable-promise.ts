@@ -7,16 +7,15 @@ export class AbortablePromise<T> extends Promise<T> {
 
   readonly [$controller]: AbortController
 
-  constructor(executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void, controller: AbortController = new AbortController()) {
-    const { signal } = controller
-    super((resolve, reject) => {
-      executor(resolve, reject)
-      signal.addEventListener("abort", () => {
-        const error = new AbortError(signal.reason)
-        reject(error)
-      })
+  constructor(executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void, controller: AbortController) => void) {
+    const { promise, resolve, reject } = Promise.withResolvers<T>()
+    super((resolve, reject) => promise.then(resolve).catch(reject))
+    this[$controller] = new AbortController()
+    this.signal.addEventListener("abort", () => {
+      const error = new AbortError(this.signal.reason)
+      reject(error)
     })
-    this[$controller] = controller
+    executor(resolve, reject, this[$controller])
   }
 
   get signal(): AbortSignal {
