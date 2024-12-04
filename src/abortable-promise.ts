@@ -1,5 +1,7 @@
+import { $controller } from "./symbols"
+
 export class AbortablePromise<T> extends Promise<T> {
-  private readonly controller: AbortController
+  readonly [$controller]: AbortController
 
   constructor(executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void, controller: AbortController = new AbortController()) {
     const { signal } = controller
@@ -10,15 +12,15 @@ export class AbortablePromise<T> extends Promise<T> {
         reject(error)
       })
     })
-    this.controller = controller
+    this[$controller] = controller
   }
 
   get signal(): AbortSignal {
-    return this.controller.signal
+    return this[$controller].signal
   }
 
   abort(reason?: any): void {
-    return this.controller.abort(reason)
+    return this[$controller].abort(reason)
   }
 
   static resolve(): AbortablePromise<void>
