@@ -132,9 +132,15 @@ export class Validator extends EventTarget {
     let result = this[$result]
     for (const plugin of this[$plugins]) {
       try {
-        const controller = new AbortController()
-        const promise = plugin(this, trigger, result, controller.signal)
-        this[$promise] = AbortablePromise.resolve(promise, controller)
+        this[$promise] = new AbortablePromise(async (resolve, reject, controller) => {
+          try {
+            const pluginResult = await plugin(this, trigger, result, controller.signal)
+            resolve(pluginResult)
+          }
+          catch (error) {
+            reject(error)
+          }
+        })
         result = (await this[$promise]) || result
       }
       catch (error) {
