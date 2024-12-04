@@ -1,6 +1,10 @@
 import { $controller } from "./symbols"
 
 export class AbortablePromise<T> extends Promise<T> {
+  static get [Symbol.species](): any {
+    return Promise
+  }
+
   readonly [$controller]: AbortController
 
   constructor(executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void, controller: AbortController = new AbortController()) {
