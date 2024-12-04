@@ -1,4 +1,4 @@
-import { AbortablePromise, AbortError } from "./utils"
+import { AbortablePromise, AbortError } from "./abortable-promise"
 
 export interface ValidationFixture {
   name: string

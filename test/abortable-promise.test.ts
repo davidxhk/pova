@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { AbortablePromise, AbortError } from "../src/utils"
+import { AbortablePromise, AbortError } from "../src/abortable-promise"
 
 describe("class AbortablePromise", () => {
   describe("constructor", () => {
