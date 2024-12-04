@@ -138,7 +138,7 @@ export class Validator extends EventTarget {
         result = (await this[$promise]) || result
       }
       catch (error) {
-        if (error instanceof AbortError) {
+        if (error instanceof DOMException && error.name === "AbortError") {
           return { state: "aborted", message: `${error}` }
         }
         if (error instanceof Error) {
