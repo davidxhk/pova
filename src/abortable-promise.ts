@@ -22,13 +22,6 @@ export class AbortablePromise<T> extends Promise<T> {
   abort(reason?: any): void {
     return this[$controller].abort(reason)
   }
-
-  static resolve(): AbortablePromise<void>
-  static resolve<T>(value: T, controller?: AbortController): AbortablePromise<Awaited<T>>
-  static resolve<T>(value: T | PromiseLike<T>, controller?: AbortController): AbortablePromise<Awaited<T>>
-  static resolve(value?: any, controller?: AbortController): AbortablePromise<any> {
-    return new AbortablePromise((resolve, reject) => Promise.resolve(value).then(resolve).catch(reject), controller)
-  }
 }
 
 export class AbortError extends Error {
