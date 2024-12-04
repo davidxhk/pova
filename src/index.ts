@@ -1,2 +1,2 @@
-export * from "./utils"
+export * from "./abortable-promise"
 export * from "./validator"

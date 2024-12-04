@@ -1,7 +1,7 @@
 import type { ValidationFixture, ValidationResult } from "../src/validator"
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { AbortablePromise, AbortError } from "../src/utils"
+import { AbortablePromise, AbortError } from "../src/abortable-promise"
 import { Validator } from "../src/validator"
 
 describe("class Validator", () => {
