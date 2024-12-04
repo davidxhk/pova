@@ -144,13 +144,8 @@ export class Validator extends EventTarget {
         result = (await this[$promise]) || result
       }
       catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          return { state: "aborted", message: `${error}` }
-        }
-        if (error instanceof Error) {
-          return { state: "error", message: `${error}` }
-        }
-        return { state: "unknown", message: JSON.stringify(error) }
+        result = handleValidationError(error)
+        return result
       }
       finally {
         this[$promise] = null
@@ -159,4 +154,14 @@ export class Validator extends EventTarget {
     this.dispatchResult(result)
     return result
   }
+}
+
+function handleValidationError(error: any): ValidationResult {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return { state: "aborted", message: `${error}` }
+  }
+  if (error instanceof Error) {
+    return { state: "error", message: `${error}` }
+  }
+  return { state: "unknown", message: JSON.stringify(error) }
 }
