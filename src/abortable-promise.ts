@@ -12,7 +12,7 @@ export class AbortablePromise<T> extends Promise<T> {
     super((resolve, reject) => promise.then(resolve).catch(reject))
     this[$controller] = new AbortController()
     this.signal.addEventListener("abort", () => {
-      const error = new AbortError(this.signal.reason)
+      const error = createAbortError(this.signal.reason)
       reject(error)
     })
     executor(resolve, reject, this[$controller])
@@ -27,11 +27,15 @@ export class AbortablePromise<T> extends Promise<T> {
   }
 }
 
-export class AbortError extends Error {
-  reason?: any
-
-  constructor(reason?: any) {
-    super(typeof reason === "string" ? `aborted due to ${reason}` : "aborted")
-    this.reason = reason
+function createAbortError(reason?: any): DOMException {
+  if (!reason) {
+    return new DOMException("signal is aborted without reason", "AbortError")
   }
+  if (reason instanceof DOMException && reason.name === "AbortError") {
+    return reason
+  }
+  if (reason instanceof Error) {
+    return new DOMException(`${reason}`, "AbortError")
+  }
+  return new DOMException(JSON.stringify(reason), "AbortError")
 }
