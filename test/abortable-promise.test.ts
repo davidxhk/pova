@@ -1,104 +1,85 @@
-import { describe, expect, it } from "vitest"
-import { AbortablePromise, AbortError } from "../src/abortable-promise"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { AbortablePromise } from "../src/abortable-promise"
+import { $controller } from "../src/symbols"
 
 describe("class AbortablePromise", () => {
+  let promise: AbortablePromise<any>
+
+  beforeEach(() => {
+    promise = new AbortablePromise(resolve => setTimeout(() => resolve(1)))
+  })
+
   describe("constructor", () => {
-    it("runs the executor and resolves with its value", async () => {
-      const promise = new AbortablePromise(resolve => resolve(1))
+    it("runs the executor", async () => {
+      const executor = vi.fn()
+      void new AbortablePromise(executor)
 
-      const result = await promise
-      expect(result).toBe(1)
+      expect(executor).toHaveBeenCalled()
     })
 
-    it("uses the specified controller when provided", () => {
-      const controller = new AbortController()
+    it("passes a resolve function to the executor", async () => {
+      const executor = vi.fn()
+      void new AbortablePromise(executor)
 
-      const promise = new AbortablePromise(resolve => resolve(1), controller)
-
-      // @ts-expect-error internal property not supported yet
-      expect(promise.controller).toBe(controller)
+      expect(executor.mock.calls[0].at(0)).toEqual(expect.any(Function))
     })
 
-    it("uses a new controller when not provided", () => {
-      const promise = new AbortablePromise(resolve => resolve(1))
+    it("passes a reject function to the executor", async () => {
+      const executor = vi.fn()
+      void new AbortablePromise(executor)
 
-      // @ts-expect-error internal property not supported yet
-      expect(promise.controller).toBeInstanceOf(AbortController)
+      expect(executor.mock.calls[0].at(1)).toEqual(expect.any(Function))
+    })
+
+    it("passes an abort controller to the executor", async () => {
+      const executor = vi.fn()
+      void new AbortablePromise(executor)
+
+      expect(executor.mock.calls[0].at(2)).toEqual(expect.any(AbortController))
+    })
+
+    it("initializes with a new abort controller", () => {
+      expect(promise[$controller]).toBeInstanceOf(AbortController)
     })
   })
 
   describe("get signal", () => {
-    it("returns the controller's signal", () => {
-      const promise = AbortablePromise.resolve(1)
-
+    it("returns the abort controller signal", () => {
       const signal = promise.signal
 
-      // @ts-expect-error internal property not supported yet
-      expect(signal).toBe(promise.controller.signal)
+      expect(signal).toBe(promise[$controller].signal)
     })
   })
 
   describe("abort", () => {
-    it("aborts the signal and rejects the promise", async () => {
-      const promise = AbortablePromise.resolve(1)
-
+    it("aborts the abort controller and rejects the promise with an abort error", async () => {
       promise.abort()
 
-      expect(promise.signal.aborted).toBe(true)
-      await expect(promise).rejects.toBeInstanceOf(AbortError)
+      expect(promise[$controller].signal.aborted).toBe(true)
+      await expect(promise).rejects.toThrow(DOMException)
     })
 
-    it("uses the specified reason when provided", async () => {
-      const promise = AbortablePromise.resolve(1)
+    it("uses a given reason if one is provided", async () => {
       const reason = "test"
 
       promise.abort(reason)
 
-      expect(promise.signal.reason).toBe(reason)
-      await expect(promise).rejects.toBeInstanceOf(AbortError)
-    })
-
-    it("uses the default reason when not provided", async () => {
-      const promise = AbortablePromise.resolve(1)
-
-      promise.abort()
-
-      expect(promise.signal.reason).toBeInstanceOf(DOMException)
-      await expect(promise).rejects.toBeInstanceOf(AbortError)
+      expect(promise[$controller].signal.reason).toBe(reason)
+      await expect(promise).rejects.toThrow(reason)
     })
   })
 
-  describe("static resolve", () => {
-    it("creates a new resolved abortable promise with a provided value", async () => {
-      const promise = AbortablePromise.resolve(1)
+  it("resolves with a given value if one is provided", async () => {
+    promise = new AbortablePromise(resolve => resolve(1))
 
-      const result = await promise
-      expect(result).toBe(1)
-    })
+    await expect(promise).resolves.toBe(1)
+  })
 
-    it("creates a new resolved abortable promise with a promise", async () => {
-      const value = Promise.resolve(1)
+  it("resolves with an awaited value if a promise-like value is provided", async () => {
+    const value = Promise.resolve(1)
 
-      const promise = AbortablePromise.resolve(value)
+    promise = new AbortablePromise(resolve => resolve(value))
 
-      const result = await promise
-      expect(result).toBe(1)
-    })
-
-    it("uses the specified controller when provided", () => {
-      const controller = new AbortController()
-
-      const promise = AbortablePromise.resolve(1, controller)
-
-      // @ts-expect-error internal property not supported yet
-      expect(promise.controller).toBe(controller)
-    })
-
-    it("uses a new controller when not provided", () => {
-      const promise = AbortablePromise.resolve(1)
-
-      // @ts-expect-error internal property not supported yet
-      expect(promise.controller).toBeInstanceOf(AbortController)
-    })
+    await expect(promise).resolves.toBe(1)
   })
 })
