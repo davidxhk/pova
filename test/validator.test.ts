@@ -71,7 +71,7 @@ describe("class Validator", () => {
 
       const result = validator.findFixture("email")
 
-      expect(result).toEqual(fixture)
+      expect(result).toBe(fixture)
     })
 
     it("finds a fixture by index if a number is provided", () => {
@@ -80,7 +80,7 @@ describe("class Validator", () => {
 
       const result = validator.findFixture(0)
 
-      expect(result).toEqual(fixture)
+      expect(result).toBe(fixture)
     })
 
     it("returns undefined if a fixture is not found", () => {
