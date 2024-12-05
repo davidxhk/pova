@@ -89,6 +89,13 @@ export class Validator extends EventTarget {
     }
   }
 
+  findFixtureIndex(name: string | ValidationFixture): number {
+    if (typeof name === "string") {
+      return this[$fixtures].findIndex(fixture => fixture.name === name)
+    }
+    return this[$fixtures].findIndex(fixture => fixture === name)
+  }
+
   removeFixture(fixture: ValidationFixture | string | number): void {
     let index = -1
     if (typeof fixture === "string") {

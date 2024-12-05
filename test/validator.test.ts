@@ -71,7 +71,7 @@ describe("class Validator", () => {
 
       const result = validator.findFixture("email")
 
-      expect(result).toEqual(fixture)
+      expect(result).toBe(fixture)
     })
 
     it("finds a fixture by index if a number is provided", () => {
@@ -80,13 +80,39 @@ describe("class Validator", () => {
 
       const result = validator.findFixture(0)
 
-      expect(result).toEqual(fixture)
+      expect(result).toBe(fixture)
     })
 
     it("returns undefined if a fixture is not found", () => {
       const result = validator.findFixture(-1)
 
       expect(result).toBeUndefined()
+    })
+  })
+
+  describe("findFixtureIndex", () => {
+    it("finds a fixture by reference", () => {
+      const fixture = { name: "email", value: "test@example.com" }
+      validator.addFixture(fixture)
+
+      const index = validator.findFixtureIndex(fixture)
+
+      expect(index).toBe(0)
+    })
+
+    it("finds a fixture index by name if a string is provided", () => {
+      const fixture = { name: "email", value: "test@example.com" }
+      validator.addFixture(fixture)
+
+      const index = validator.findFixtureIndex("email")
+
+      expect(index).toBe(0)
+    })
+
+    it("returns -1 if a fixture is not found", () => {
+      const index = validator.findFixtureIndex("unknown")
+
+      expect(index).toBe(-1)
     })
   })
 
