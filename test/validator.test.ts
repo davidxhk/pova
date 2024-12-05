@@ -54,6 +54,26 @@ describe("class Validator", () => {
     })
   })
 
+  describe("get result", () => {
+    it("returns null if no result exists", () => {
+      expect(validator.result).toBeNull()
+    })
+
+    it("returns a frozen clone of the result if one exists", () => {
+      const result = { state: "initial" }
+      validator.dispatchResult(result)
+
+      const actual = validator.result
+      if (!actual) {
+        expect.unreachable("Result should not be null")
+      }
+
+      expect(actual).not.toBe(result)
+      expect(actual).toMatchObject(result)
+      expect(() => (actual.state = "test")).toThrow(TypeError)
+    })
+  })
+
   describe("addFixture", () => {
     it("adds a fixture to the fixtures list", () => {
       const fixture = { name: "email", value: "test@example.com" }
