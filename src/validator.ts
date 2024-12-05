@@ -10,7 +10,7 @@ export interface ValidationPluginProps {
   validator: Validator
   trigger: string | undefined
   result: ValidationResult | null
-  signal: AbortSignal
+  controller: AbortController
 }
 
 type Promisable<T> = T | PromiseLike<T>
@@ -150,10 +150,10 @@ export class Validator extends EventTarget {
   }
 }
 
-function resolveValidationPlugin(plugin: ValidationPlugin, props: Omit<ValidationPluginProps, "signal">): AbortablePromise<ValidationResult | void> {
+function resolveValidationPlugin(plugin: ValidationPlugin, props: Omit<ValidationPluginProps, "controller">): AbortablePromise<ValidationResult | void> {
   return new AbortablePromise(async (resolve, reject, controller) => {
     try {
-      const result = await plugin({ ...props, signal: controller.signal })
+      const result = await plugin({ ...props, controller })
       resolve(result)
     }
     catch (error) {
