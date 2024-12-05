@@ -1,18 +1,24 @@
-import { AbortablePromise, AbortError } from "./utils"
+import { AbortablePromise } from "./abortable-promise"
+import { createReadonlyProxy } from "./create-readonly-proxy"
+import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
+
+export type ValidatorProxy = Pick<Validator, "findFixture" | "dispatchResult">
 
 export interface ValidationFixture {
   name: string
   value: string
 }
 
+export interface ValidationPluginProps {
+  validator: ValidatorProxy
+  trigger: string | undefined
+  result: ValidationResult | null
+  controller: AbortController
+}
+
 type Promisable<T> = T | PromiseLike<T>
 
-export type ValidationPlugin = (
-  validator: Validator,
-  trigger: string | undefined,
-  result: ValidationResult | null,
-  signal: AbortSignal
-) => Promisable<ValidationResult | void>
+export type ValidationPlugin = (props: ValidationPluginProps) => Promisable<ValidationResult | void>
 
 type JSONValue = string | number | boolean | JSONValue[] | { [key: string]: JSONValue }
 
@@ -55,101 +61,118 @@ export interface Validator {
 }
 
 export class Validator extends EventTarget {
-  readonly fixtures: ValidationFixture[]
-  readonly plugins: ValidationPlugin[]
-  result: ValidationResult | null
-  promise: AbortablePromise<ValidationResult | void> | null
+  readonly [$proxy]: ValidatorProxy
+  readonly [$fixtures]: ValidationFixture[]
+  readonly [$plugins]: ValidationPlugin[]
+  [$promise]: AbortablePromise<ValidationResult | void> | null
+  [$result]: ValidationResult | null
 
   constructor(fixtures: ValidationFixture[] = [], plugins: ValidationPlugin[] = []) {
     super()
-    this.fixtures = fixtures
-    this.plugins = plugins
-    this.result = null
-    this.promise = null
+    this[$proxy] = createReadonlyProxy(this, "findFixture", "dispatchResult")
+    this[$fixtures] = fixtures
+    this[$plugins] = plugins
+    this[$promise] = null
+    this[$result] = null
   }
 
   addFixture(fixture: ValidationFixture): void {
-    this.fixtures.push(fixture)
+    this[$fixtures].push(fixture)
   }
 
   findFixture(name: string | number): ValidationFixture | undefined {
     if (typeof name === "string") {
-      return this.fixtures.find(fixture => fixture.name === name)
+      return this[$fixtures].find(fixture => fixture.name === name)
     }
     else if (typeof name === "number") {
-      return this.fixtures[name]
+      return this[$fixtures][name]
     }
   }
 
   removeFixture(fixture: ValidationFixture | string | number): void {
     let index = -1
     if (typeof fixture === "string") {
-      index = this.fixtures.findIndex(f => f.name === fixture)
+      index = this[$fixtures].findIndex(f => f.name === fixture)
     }
     else if (typeof fixture === "number") {
-      if (fixture >= 0 && fixture < this.fixtures.length) {
+      if (fixture >= 0 && fixture < this[$fixtures].length) {
         index = fixture
       }
     }
     else {
-      index = this.fixtures.findIndex(f => f === fixture)
+      index = this[$fixtures].findIndex(f => f === fixture)
     }
     if (index > -1) {
-      this.fixtures.splice(index, 1)
+      this[$fixtures].splice(index, 1)
     }
   }
 
   addPlugin(plugin: ValidationPlugin): void {
-    this.plugins.push(plugin)
+    this[$plugins].push(plugin)
   }
 
   removePlugin(plugin: ValidationPlugin): void {
-    const index = this.plugins.indexOf(plugin)
+    const index = this[$plugins].indexOf(plugin)
     if (index > -1) {
-      this.plugins.splice(index, 1)
+      this[$plugins].splice(index, 1)
     }
   }
 
   dispatchResult(result: ValidationResult | null): void {
-    this.result = result
+    this[$result] = result
     this.dispatchEvent(new CustomEvent("validation", { detail: result }))
   }
 
   abort(reason?: string): void {
-    if (this.promise) {
-      this.promise.abort(reason)
+    if (this[$promise]) {
+      this[$promise].abort(reason)
     }
   }
 
   reset(): void {
-    this.abort("validation reset")
+    this.abort("reset")
     this.dispatchResult(null)
   }
 
   async validate(trigger?: string): Promise<ValidationResult | null> {
-    this.abort(`${trigger} revalidation`)
-    let result = this.result
-    for (const plugin of this.plugins) {
+    this.abort(`revalidation${trigger ? ` triggered by ${trigger}` : ""}`)
+    let result = this[$result]
+    for (const plugin of this[$plugins]) {
       try {
-        const controller = new AbortController()
-        const promise = plugin(this, trigger, result, controller.signal)
-        this.promise = AbortablePromise.resolve(promise, controller)
-        result = (await this.promise) || result
+        this[$promise] = resolveValidationPlugin(plugin, { validator: this[$proxy], trigger, result })
+        result = (await this[$promise]) || result
       }
       catch (error) {
-        if (error instanceof AbortError) {
-          return { state: "aborted", message: `${error}` }
-        }
-        if (error instanceof Error) {
-          return { state: "error", message: `${error}` }
-        }
-        return { state: "unknown", message: JSON.stringify(error) }
+        result = handleValidationError(error)
+        return result
       }
       finally {
-        this.promise = null
+        this[$promise] = null
       }
     }
     this.dispatchResult(result)
     return result
   }
+}
+
+function resolveValidationPlugin(plugin: ValidationPlugin, props: Omit<ValidationPluginProps, "controller">): AbortablePromise<ValidationResult | void> {
+  return new AbortablePromise(async (resolve, reject, controller) => {
+    try {
+      const result = await plugin({ ...props, controller })
+      resolve(result)
+    }
+    catch (error) {
+      reject(error)
+    }
+  })
+}
+
+function handleValidationError(error: any): ValidationResult {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return { state: "aborted", message: `${error}` }
+  }
+  if (error instanceof Error) {
+    return { state: "error", message: `${error}` }
+  }
+  return { state: "unknown", message: JSON.stringify(error) }
 }
