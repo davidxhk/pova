@@ -2,7 +2,7 @@ import { AbortablePromise } from "./abortable-promise"
 import { createReadonlyProxy } from "./create-readonly-proxy"
 import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
 
-export type ValidatorProxy = Pick<Validator, "findFixture" | "dispatchResult">
+export type ValidatorProxy = Pick<Validator, "result" | "findFixture" | "dispatchResult">
 
 export interface ValidationFixture {
   name: string
@@ -69,7 +69,7 @@ export class Validator extends EventTarget {
 
   constructor(fixtures: ValidationFixture[] = [], plugins: ValidationPlugin[] = []) {
     super()
-    this[$proxy] = createReadonlyProxy(this, "findFixture", "dispatchResult")
+    this[$proxy] = createReadonlyProxy(this, "result", "findFixture", "dispatchResult")
     this[$fixtures] = fixtures
     this[$plugins] = plugins
     this[$promise] = null
