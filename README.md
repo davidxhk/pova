@@ -47,12 +47,7 @@ validator.addFixture(usernameInput)
 4. Define validation logic within [plugin(s)](#plugins):
 
 ```javascript
-validator.addPlugin((validator, trigger, result) => {
-  // Exit if state has been determined
-  if (result.state) {
-    return
-  }
-
+validator.addPlugin(({ validator }) => {
   // Access fixture
   const fixture = validator.findFixture("username")
   if (!fixture) {
@@ -78,7 +73,9 @@ usernameInput.addEventListener("input", () => {
   // Trigger validation
   validator.validate("input")
 })
+```
 
+```javascript
 const message = document.getElementById("message")
 
 // Update username message on validation
@@ -111,7 +108,7 @@ validator.addEventListener("validation", (event) => {
 
   3. **current result**: To access the current validation state.
 
-  4. **abort signal**: To handle interruptions\* during execution.
+  4. **abort controller**: To abort the validation or handle interruptions\* during execution.
 
       \* See [abortable promises](#abortable-promises) to learn more.
 
@@ -123,7 +120,7 @@ validator.addEventListener("validation", (event) => {
 
 - **Purpose**: Abortable promises are used to resolve each plugin during validation.
 
-- **Context**: When a new validation process begins, any plugin that is currently running will be aborted. The abort signal can be used to implement **debouncing**\*.
+- **Context**: When a new validation process begins, any plugin that is currently running will be aborted. This allows validations to be **debounced**\*.
 
   \* See [this example](#example-debouncing-server-requests) to learn more.
 
@@ -154,11 +151,7 @@ const emailInput = document.getElementById("email")
 
 validator.addFixture(emailInput)
 
-validator.addPlugin(async (validator, trigger, result, signal) => {
-  if (result.state) {
-    return
-  }
-
+validator.addPlugin(async ({ validator }) => {
   const fixture = validator.findFixture("email")
   if (!fixture) {
     throw new Error("Fixture not found")
@@ -188,6 +181,7 @@ emailInput.addEventListener("input", () => {
 })
 
 const message = document.getElementById("message")
+
 validator.addEventListener("validation", (event) => {
   message.innerHTML = event.detail.message
 })
@@ -216,11 +210,7 @@ const emailInput = document.getElementById("email")
 
 validator.addFixture(emailInput)
 
-validator.addPlugin(async (validator, trigger, result, signal) => {
-  if (result.state) {
-    return
-  }
-
+validator.addPlugin(async ({ validator, controller }) => {
   const fixture = validator.findFixture("email")
   if (!fixture) {
     throw new Error("Fixture not found")
@@ -235,7 +225,7 @@ validator.addPlugin(async (validator, trigger, result, signal) => {
   await new Promise(resolve => setTimeout(resolve, 500))
 
   // Exit early if the plugin has been aborted
-  if (signal.aborted) {
+  if (controller.signal.aborted) {
     return
   }
 
@@ -255,6 +245,7 @@ emailInput.addEventListener("input", () => {
 })
 
 const message = document.getElementById("message")
+
 validator.addEventListener("validation", (event) => {
   message.innerHTML = event.detail.message
 })
@@ -264,7 +255,7 @@ What changed in this example:
 
 - **Delay**: A debounce delay of 500ms is introduced before the server request to give the user time to stop typing.
 
-- **Early exit**: If the user inputs during the delay, the signal will be aborted, allowing the plugin to exit early and skip the server request.
+- **Early exit**: If the user inputs during the delay, the controller signal will be aborted, allowing the plugin to exit early and skip the server request.
 
 ## Conclusion
 
