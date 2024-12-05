@@ -305,7 +305,7 @@ describe("class Validator", () => {
       expect(plugin).toHaveBeenCalledWith(expect.objectContaining({ controller: expect.any(AbortController) }))
     })
 
-    it("passes a target with the trigger into a plugin", async () => {
+    it("passes the trigger into a plugin", async () => {
       const plugin = vi.fn()
       validator.addPlugin(plugin)
       const trigger = "test"
@@ -315,7 +315,7 @@ describe("class Validator", () => {
       expect(plugin).toHaveBeenCalledWith(expect.objectContaining({ trigger }))
     })
 
-    it("passes a target with the last dispatched result into the first plugin if a result has been dispatched", async () => {
+    it("passes the last dispatched result into the first plugin if a result has been dispatched", async () => {
       const result = { state: "initial" }
       validator.dispatchResult(result)
       const plugin = vi.fn()
@@ -326,7 +326,7 @@ describe("class Validator", () => {
       expect(plugin).toHaveBeenCalledWith(expect.objectContaining({ result }))
     })
 
-    it("passes a target with a null result into the first plugin if a result has not been dispatched", async () => {
+    it("passes a null result into the first plugin if a result has not been dispatched", async () => {
       const plugin = vi.fn()
       validator.addPlugin(plugin)
 
@@ -335,7 +335,7 @@ describe("class Validator", () => {
       expect(plugin).toHaveBeenCalledWith(expect.objectContaining({ result: null }))
     })
 
-    it("passes a target with the last plugin-returned result into the second plugin onwards", async () => {
+    it("passes the last plugin-returned result into the second plugin onwards", async () => {
       const plugins = Array.from(results, result => vi.fn(() => result))
       plugins.forEach(plugin => validator.addPlugin(plugin))
 
