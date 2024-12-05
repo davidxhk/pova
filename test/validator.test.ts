@@ -90,6 +90,32 @@ describe("class Validator", () => {
     })
   })
 
+  describe("findFixtureIndex", () => {
+    it("finds a fixture by reference", () => {
+      const fixture = { name: "email", value: "test@example.com" }
+      validator.addFixture(fixture)
+
+      const index = validator.findFixtureIndex(fixture)
+
+      expect(index).toBe(0)
+    })
+
+    it("finds a fixture index by name if a string is provided", () => {
+      const fixture = { name: "email", value: "test@example.com" }
+      validator.addFixture(fixture)
+
+      const index = validator.findFixtureIndex("email")
+
+      expect(index).toBe(0)
+    })
+
+    it("returns -1 if a fixture is not found", () => {
+      const index = validator.findFixtureIndex("unknown")
+
+      expect(index).toBe(-1)
+    })
+  })
+
   describe("removeFixture", () => {
     it("removes a fixture from the fixtures list by name", () => {
       const fixture = { name: "email", value: "test@example.com" }
