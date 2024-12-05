@@ -91,7 +91,7 @@ describe("class Validator", () => {
   })
 
   describe("findFixtureIndex", () => {
-    it("finds a fixture by reference", () => {
+    it("finds a fixture index by reference", () => {
       const fixture = { name: "email", value: "test@example.com" }
       validator.addFixture(fixture)
 
