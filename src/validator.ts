@@ -6,14 +6,16 @@ export interface ValidationFixture {
   value: string
 }
 
+export interface ValidationPluginProps {
+  validator: Validator
+  trigger: string | undefined
+  result: ValidationResult | null
+  signal: AbortSignal
+}
+
 type Promisable<T> = T | PromiseLike<T>
 
-export type ValidationPlugin = (
-  validator: Validator,
-  trigger: string | undefined,
-  result: ValidationResult | null,
-  signal: AbortSignal
-) => Promisable<ValidationResult | void>
+export type ValidationPlugin = (props: ValidationPluginProps) => Promisable<ValidationResult | void>
 
 type JSONValue = string | number | boolean | JSONValue[] | { [key: string]: JSONValue }
 
@@ -132,7 +134,7 @@ export class Validator extends EventTarget {
     let result = this[$result]
     for (const plugin of this[$plugins]) {
       try {
-        this[$promise] = resolveValidationPlugin(plugin, this, trigger, result)
+        this[$promise] = resolveValidationPlugin(plugin, { validator: this, trigger, result })
         result = (await this[$promise]) || result
       }
       catch (error) {
@@ -148,11 +150,11 @@ export class Validator extends EventTarget {
   }
 }
 
-function resolveValidationPlugin(plugin: ValidationPlugin, validator: Validator, trigger: string | undefined, result: ValidationResult | null): AbortablePromise<ValidationResult | void> {
+function resolveValidationPlugin(plugin: ValidationPlugin, props: Omit<ValidationPluginProps, "signal">): AbortablePromise<ValidationResult | void> {
   return new AbortablePromise(async (resolve, reject, controller) => {
     try {
-      const pluginResult = await plugin(validator, trigger, result, controller.signal)
-      resolve(pluginResult)
+      const result = await plugin({ ...props, signal: controller.signal })
+      resolve(result)
     }
     catch (error) {
       reject(error)
