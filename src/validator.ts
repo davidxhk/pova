@@ -130,12 +130,12 @@ export class Validator extends EventTarget {
   }
 
   reset(): void {
-    this.abort("validation reset")
+    this.abort("reset")
     this.dispatchResult(null)
   }
 
   async validate(trigger?: string): Promise<ValidationResult | null> {
-    this.abort(`${trigger} revalidation`)
+    this.abort(`revalidation${trigger ? ` triggered by ${trigger}` : ""}`)
     let result = this[$result]
     for (const plugin of this[$plugins]) {
       try {
