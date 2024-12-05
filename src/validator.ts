@@ -1,5 +1,8 @@
 import { AbortablePromise } from "./abortable-promise"
-import { $fixtures, $plugins, $promise, $result } from "./symbols"
+import { createReadonlyProxy } from "./create-readonly-proxy"
+import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
+
+export type ValidatorProxy = Pick<Validator, "findFixture" | "dispatchResult">
 
 export interface ValidationFixture {
   name: string
@@ -7,7 +10,7 @@ export interface ValidationFixture {
 }
 
 export interface ValidationPluginProps {
-  validator: Validator
+  validator: ValidatorProxy
   trigger: string | undefined
   result: ValidationResult | null
   controller: AbortController
@@ -58,6 +61,7 @@ export interface Validator {
 }
 
 export class Validator extends EventTarget {
+  readonly [$proxy]: ValidatorProxy
   readonly [$fixtures]: ValidationFixture[]
   readonly [$plugins]: ValidationPlugin[]
   [$promise]: AbortablePromise<ValidationResult | void> | null
@@ -65,6 +69,7 @@ export class Validator extends EventTarget {
 
   constructor(fixtures: ValidationFixture[] = [], plugins: ValidationPlugin[] = []) {
     super()
+    this[$proxy] = createReadonlyProxy(this, "findFixture", "dispatchResult")
     this[$fixtures] = fixtures
     this[$plugins] = plugins
     this[$promise] = null
@@ -134,7 +139,7 @@ export class Validator extends EventTarget {
     let result = this[$result]
     for (const plugin of this[$plugins]) {
       try {
-        this[$promise] = resolveValidationPlugin(plugin, { validator: this, trigger, result })
+        this[$promise] = resolveValidationPlugin(plugin, { validator: this[$proxy], trigger, result })
         result = (await this[$promise]) || result
       }
       catch (error) {
