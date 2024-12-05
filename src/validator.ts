@@ -76,6 +76,14 @@ export class Validator extends EventTarget {
     this[$result] = null
   }
 
+  get result(): ValidationResult | null {
+    if (!this[$result]) {
+      return null
+    }
+    const clone = Object.assign({}, this[$result])
+    return Object.freeze(clone)
+  }
+
   addFixture(fixture: ValidationFixture): void {
     this[$fixtures].push(fixture)
   }
