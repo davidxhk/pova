@@ -19,13 +19,12 @@ describe("class Validator", () => {
       expect(validator[$proxy]).not.toBe(validator)
     })
 
-    it("initializes with an empty fixtures list", () => {
-      expect(validator[$fixtures]).toEqual(expect.any(Array))
-      expect(validator[$fixtures]).toHaveLength(0)
+    it("initializes with an empty fixtures object", () => {
+      expect(validator[$fixtures]).toEqual({})
     })
 
-    it("initializes with a given fixtures list if one is provided", () => {
-      const fixtures = []
+    it("initializes with a given fixtures object if one is provided", () => {
+      const fixtures = {}
 
       validator = new Validator(fixtures)
 
@@ -75,17 +74,17 @@ describe("class Validator", () => {
   })
 
   describe("addFixture", () => {
-    it("adds a fixture to the fixtures list", () => {
+    it("adds a fixture to the fixtures object by name", () => {
       const fixture = { name: "email", value: "test@example.com" }
 
       validator.addFixture(fixture)
 
-      expect(validator[$fixtures]).toContain(fixture)
+      expect(validator[$fixtures][fixture.name]).toBe(fixture)
     })
   })
 
   describe("findFixture", () => {
-    it("finds a fixture by name if a string is provided", () => {
+    it("finds a fixture in the fixtures object by name", () => {
       const fixture = { name: "email", value: "test@example.com" }
       validator.addFixture(fixture)
 
@@ -94,72 +93,19 @@ describe("class Validator", () => {
       expect(result).toBe(fixture)
     })
 
-    it("finds a fixture by index if a number is provided", () => {
-      const fixture = { name: "email", value: "test@example.com" }
-      validator.addFixture(fixture)
-
-      const result = validator.findFixture(0)
-
-      expect(result).toBe(fixture)
-    })
-
     it("returns undefined if a fixture is not found", () => {
-      const result = validator.findFixture(-1)
+      const result = validator.findFixture("unknown")
 
       expect(result).toBeUndefined()
     })
   })
 
-  describe("findFixtureIndex", () => {
-    it("finds a fixture index by reference", () => {
-      const fixture = { name: "email", value: "test@example.com" }
-      validator.addFixture(fixture)
-
-      const index = validator.findFixtureIndex(fixture)
-
-      expect(index).toBe(0)
-    })
-
-    it("finds a fixture index by name if a string is provided", () => {
-      const fixture = { name: "email", value: "test@example.com" }
-      validator.addFixture(fixture)
-
-      const index = validator.findFixtureIndex("email")
-
-      expect(index).toBe(0)
-    })
-
-    it("returns -1 if a fixture is not found", () => {
-      const index = validator.findFixtureIndex("unknown")
-
-      expect(index).toBe(-1)
-    })
-  })
-
   describe("removeFixture", () => {
-    it("removes a fixture from the fixtures list by name", () => {
+    it("removes a fixture from the fixtures object by name", () => {
       const fixture = { name: "email", value: "test@example.com" }
       validator.addFixture(fixture)
 
       validator.removeFixture("email")
-
-      expect(validator[$fixtures]).not.toContain(fixture)
-    })
-
-    it("removes a fixture from the fixtures list by index", () => {
-      const fixture = { name: "email", value: "test@example.com" }
-      validator.addFixture(fixture)
-
-      validator.removeFixture(0)
-
-      expect(validator[$fixtures]).not.toContain(fixture)
-    })
-
-    it("removes a fixture from the fixtures list by reference", () => {
-      const fixture = { name: "email", value: "test@example.com" }
-      validator.addFixture(fixture)
-
-      validator.removeFixture(fixture)
 
       expect(validator[$fixtures]).not.toContain(fixture)
     })
