@@ -104,6 +104,23 @@ describe("class Validator", () => {
     })
   })
 
+  describe("hasFixture", () => {
+    it("returns true if a fixture exists for a given name", () => {
+      const fixture = { name: "email", value: "test@example.com" }
+      validator.addFixture(fixture)
+
+      const result = validator.hasFixture("email")
+
+      expect(result).toBe(true)
+    })
+
+    it("returns false if a fixture does not exist for a given name", () => {
+      const result = validator.hasFixture("email")
+
+      expect(result).toBe(false)
+    })
+  })
+
   describe("findFixture", () => {
     it("finds a fixture in the fixtures object by name", () => {
       const fixture = { name: "email", value: "test@example.com" }

@@ -88,14 +88,20 @@ export class Validator extends EventTarget {
     if (!name) {
       throw new Error("Fixture must have a name")
     }
-    if (name in this[$fixtures]) {
+    if (this.hasFixture(name)) {
       throw new Error(`Fixture '${name}' already exists`)
     }
     this[$fixtures][name] = fixture
   }
 
-  findFixture(name: string): ValidationFixture | undefined {
-    return this[$fixtures][name]
+  hasFixture(name: string): boolean {
+    return name in this[$fixtures]
+  }
+
+  findFixture(name: string): any | undefined {
+    if (this.hasFixture(name)) {
+      return this[$fixtures][name]
+    }
   }
 
   getFixture(name: string): ValidationFixture {
@@ -109,7 +115,7 @@ export class Validator extends EventTarget {
   removeFixture(fixture: ValidationFixture | string): void {
     let name: string | undefined
     if (typeof fixture === "string") {
-      if (fixture in this[$fixtures]) {
+      if (this.hasFixture(fixture)) {
         name = fixture
       }
     }
