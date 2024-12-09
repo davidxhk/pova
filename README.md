@@ -48,15 +48,11 @@ validator.addFixture(usernameInput)
 
 ```javascript
 validator.addPlugin(({ validator }) => {
-  // Access fixture
-  const fixture = validator.findFixture("username")
-  if (!fixture) {
-    throw new Error("Fixture not found")
-  }
+  // Get fixture value
+  const { value } = validator.getFixture("username")
 
-  // Check username length
-  const username = fixture.value
-  if (username.length < 3) {
+  // Check its length
+  if (value.length < 3) {
     return { state: "invalid", message: "Username must be at least 3 characters." }
   }
 })
@@ -78,7 +74,7 @@ usernameInput.addEventListener("input", () => {
 ```javascript
 const message = document.getElementById("message")
 
-// Update username message on validation
+// Update username message on validation event
 validator.addEventListener("validation", (event) => {
   message.innerHTML = event.detail.message
 })
@@ -102,7 +98,7 @@ validator.addEventListener("validation", (event) => {
 
 - **Arguments**: Each plugin has access to the following arguments:
 
-  1. **validator**: To access fixtures via `validator.findFixture()`.
+  1. **validator**: To access fixtures via `validator.getFixture()`.
 
   2. **trigger**: To check what triggered the validation.
 
@@ -152,14 +148,11 @@ const emailInput = document.getElementById("email")
 validator.addFixture(emailInput)
 
 validator.addPlugin(async ({ validator }) => {
-  const fixture = validator.findFixture("email")
-  if (!fixture) {
-    throw new Error("Fixture not found")
-  }
+  // Get email value or throw an error if fixture not found
+  const { value } = validator.getFixture("email")
 
   // Check email format using regex
-  const email = fixture.value
-  if (!EMAIL_REGEX.test(email)) {
+  if (!EMAIL_REGEX.test(value)) {
     return { state: "invalid", message: "Enter a valid email address." }
   }
 
@@ -167,7 +160,7 @@ validator.addPlugin(async ({ validator }) => {
   validator.dispatchResult({ state: "pending", message: "Checking availability..." })
 
   // Check email availability with server request
-  const response = await fetch(`/check-availability?email=${email}`).then(res => res.json())
+  const response = await fetch(`/check-availability?email=${value}`).then(res => res.json())
   if (!response.isAvailable) {
     return { state: "invalid", message: "Email is already in use." }
   }
@@ -211,13 +204,9 @@ const emailInput = document.getElementById("email")
 validator.addFixture(emailInput)
 
 validator.addPlugin(async ({ validator, controller }) => {
-  const fixture = validator.findFixture("email")
-  if (!fixture) {
-    throw new Error("Fixture not found")
-  }
+  const { value } = validator.getFixture("email")
 
-  const email = fixture.value
-  if (!EMAIL_REGEX.test(email)) {
+  if (!EMAIL_REGEX.test(value)) {
     return { state: "invalid", message: "Please enter a valid email address." }
   }
 
@@ -231,7 +220,7 @@ validator.addPlugin(async ({ validator, controller }) => {
 
   validator.dispatchResult({ state: "pending", message: "Checking availability..." })
 
-  const response = await fetch(`/check-availability?email=${email}`).then(res => res.json())
+  const response = await fetch(`/check-availability?email=${value}`).then(res => res.json())
   if (!response.isAvailable) {
     return { state: "invalid", message: "Email is already in use." }
   }
