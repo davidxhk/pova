@@ -5,7 +5,7 @@ import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
 export type ValidatorProxy = Pick<Validator, "result" | "findFixture" | "dispatchResult">
 
 export interface ValidationFixture {
-  name: string
+  name?: string
   value: string
 }
 
@@ -84,16 +84,36 @@ export class Validator extends EventTarget {
     return Object.freeze(clone)
   }
 
-  addFixture(fixture: ValidationFixture): void {
-    this[$fixtures][fixture.name] = fixture
+  addFixture(fixture: ValidationFixture, name: string | undefined = fixture.name): void {
+    if (!name) {
+      throw new Error("Fixture must have a name")
+    }
+    if (name in this[$fixtures]) {
+      throw new Error(`Fixture '${name}' already exists`)
+    }
+    this[$fixtures][name] = fixture
   }
 
   findFixture(name: string): ValidationFixture | undefined {
     return this[$fixtures][name]
   }
 
-  removeFixture(name: string): void {
-    delete this[$fixtures][name]
+  removeFixture(fixture: ValidationFixture | string): void {
+    let name: string | undefined
+    if (typeof fixture === "string") {
+      if (fixture in this[$fixtures]) {
+        name = fixture
+      }
+    }
+    else {
+      const entry = Object.entries(this[$fixtures]).find(entry => fixture === entry[1])
+      if (entry) {
+        name = entry[0]
+      }
+    }
+    if (name) {
+      delete this[$fixtures][name]
+    }
   }
 
   addPlugin(plugin: ValidationPlugin): void {
