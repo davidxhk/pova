@@ -128,7 +128,16 @@ describe("class Validator", () => {
 
       validator.removeFixture("email")
 
-      expect(validator[$fixtures]).not.toContain(fixture)
+      expect(validator[$fixtures].email).toBeUndefined()
+    })
+
+    it("removes a fixture from the fixtures object by reference", () => {
+      const fixture = { name: "email", value: "test@example.com" }
+      validator.addFixture(fixture)
+
+      validator.removeFixture(fixture)
+
+      expect(validator[$fixtures].email).toBeUndefined()
     })
   })
 
