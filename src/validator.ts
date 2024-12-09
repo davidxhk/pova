@@ -185,11 +185,12 @@ function resolveValidationPlugin(plugin: ValidationPlugin, props: Omit<Validatio
 }
 
 function handleValidationError(error: any): ValidationResult {
-  if (error instanceof DOMException && error.name === "AbortError") {
-    return { state: "aborted", message: `${error}` }
-  }
   if (error instanceof Error) {
-    return { state: "error", message: `${error}` }
+    return { state: isAbortError(error) ? "aborted" : "error", message: `${error}` }
   }
   return { state: "unknown", message: JSON.stringify(error) }
+}
+
+function isAbortError(error: any): boolean {
+  return error instanceof DOMException && error.name === "AbortError"
 }
