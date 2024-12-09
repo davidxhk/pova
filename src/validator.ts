@@ -62,12 +62,12 @@ export interface Validator {
 
 export class Validator extends EventTarget {
   readonly [$proxy]: ValidatorProxy
-  readonly [$fixtures]: ValidationFixture[]
+  readonly [$fixtures]: Record<string, ValidationFixture>
   readonly [$plugins]: ValidationPlugin[]
   [$promise]: AbortablePromise<ValidationResult | void> | null
   [$result]: ValidationResult | null
 
-  constructor(fixtures: ValidationFixture[] = [], plugins: ValidationPlugin[] = []) {
+  constructor(fixtures: Record<string, ValidationFixture> = {}, plugins: ValidationPlugin[] = []) {
     super()
     this[$proxy] = createReadonlyProxy(this, "result", "findFixture", "dispatchResult")
     this[$fixtures] = fixtures
@@ -85,41 +85,15 @@ export class Validator extends EventTarget {
   }
 
   addFixture(fixture: ValidationFixture): void {
-    this[$fixtures].push(fixture)
+    this[$fixtures][fixture.name] = fixture
   }
 
-  findFixture(name: string | number): ValidationFixture | undefined {
-    if (typeof name === "string") {
-      return this[$fixtures].find(fixture => fixture.name === name)
-    }
-    else if (typeof name === "number") {
-      return this[$fixtures][name]
-    }
+  findFixture(name: string): ValidationFixture | undefined {
+    return this[$fixtures][name]
   }
 
-  findFixtureIndex(name: string | ValidationFixture): number {
-    if (typeof name === "string") {
-      return this[$fixtures].findIndex(fixture => fixture.name === name)
-    }
-    return this[$fixtures].findIndex(fixture => fixture === name)
-  }
-
-  removeFixture(fixture: ValidationFixture | string | number): void {
-    let index = -1
-    if (typeof fixture === "string") {
-      index = this[$fixtures].findIndex(f => f.name === fixture)
-    }
-    else if (typeof fixture === "number") {
-      if (fixture >= 0 && fixture < this[$fixtures].length) {
-        index = fixture
-      }
-    }
-    else {
-      index = this[$fixtures].findIndex(f => f === fixture)
-    }
-    if (index > -1) {
-      this[$fixtures].splice(index, 1)
-    }
+  removeFixture(name: string): void {
+    delete this[$fixtures][name]
   }
 
   addPlugin(plugin: ValidationPlugin): void {
