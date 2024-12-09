@@ -81,6 +81,27 @@ describe("class Validator", () => {
 
       expect(validator[$fixtures][fixture.name]).toBe(fixture)
     })
+
+    it("uses a given name if one is provided", () => {
+      const fixture = { name: "email", value: "test@example.com" }
+
+      validator.addFixture(fixture, "test")
+
+      expect(validator[$fixtures].test).toBe(fixture)
+    })
+
+    it("throws an error if no name is provided", () => {
+      const fixture = { value: "test@example.com" }
+
+      expect(() => validator.addFixture(fixture)).toThrow()
+    })
+
+    it("throws an error if a fixture already exists for a given name", () => {
+      validator = new Validator({ email: { value: "test@example.com" } })
+      const fixture = { name: "email", value: "test@example.com" }
+
+      expect(() => validator.addFixture(fixture)).toThrow()
+    })
   })
 
   describe("findFixture", () => {
