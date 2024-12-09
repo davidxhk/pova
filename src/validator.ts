@@ -120,9 +120,11 @@ export class Validator extends EventTarget {
       }
     }
     else {
-      const entry = Object.entries(this[$fixtures]).find(entry => fixture === entry[1])
-      if (entry) {
-        name = entry[0]
+      for (const entry of Object.entries(this[$fixtures])) {
+        if (entry[1] === fixture) {
+          name = entry[0]
+          break
+        }
       }
     }
     if (name) {
