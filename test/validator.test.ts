@@ -121,6 +121,21 @@ describe("class Validator", () => {
     })
   })
 
+  describe("getFixture", () => {
+    it("gets a fixture in the fixtures object by name", () => {
+      const fixture = { name: "email", value: "test@example.com" }
+      validator.addFixture(fixture)
+
+      const result = validator.getFixture("email")
+
+      expect(result).toBe(fixture)
+    })
+
+    it("throws an error if a fixture is not found", () => {
+      expect(() => validator.getFixture("unknown")).toThrow()
+    })
+  })
+
   describe("removeFixture", () => {
     it("removes a fixture from the fixtures object by name", () => {
       const fixture = { name: "email", value: "test@example.com" }
