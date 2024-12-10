@@ -12,11 +12,11 @@ export function createReadonlyProxy(target: { [key: string | symbol | number]: a
     },
 
     ...(mask.length > 0 && {
-      get: (target, prop, receiver) => {
+      get: (target, prop) => {
         if (Object.hasOwn(target, prop) && !maskedProps.has(prop)) {
           return
         }
-        const value = Reflect.get(target, prop, receiver)
+        const value = Reflect.get(target, prop)
         return typeof value == "function" ? value.bind(target) : value
       },
 
