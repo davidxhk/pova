@@ -7,7 +7,7 @@ import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
 
 export type ValidatorProxy = Pick<Validator, "result" | "findFixture" | "getFixture" | "getFixtureValue" | "dispatchResult">
 
-export interface ValidationPluginProps {
+export interface PluginProps {
   validator: ValidatorProxy
   trigger: string | undefined
   result: ValidationResult | null
@@ -16,7 +16,7 @@ export interface ValidationPluginProps {
 
 type Promisable<T> = T | PromiseLike<T>
 
-export type ValidationPlugin = (props: ValidationPluginProps) => Promisable<ValidationResult | void>
+export type ValidationPlugin = (props: PluginProps) => Promisable<ValidationResult | void>
 
 type JSONValue = string | number | boolean | JSONValue[] | { [key: string]: JSONValue }
 
@@ -214,7 +214,7 @@ export class Validator extends EventTarget {
   }
 }
 
-function resolveValidationPlugin(plugin: ValidationPlugin, props: Omit<ValidationPluginProps, "controller">): AbortablePromise<ValidationResult | void> {
+function resolveValidationPlugin(plugin: ValidationPlugin, props: Omit<PluginProps, "controller">): AbortablePromise<ValidationResult | void> {
   return new AbortablePromise(async (resolve, reject, controller) => {
     try {
       const result = await plugin({ ...props, controller })
