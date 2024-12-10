@@ -4,11 +4,6 @@ import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
 
 export type ValidatorProxy = Pick<Validator, "result" | "findFixture" | "getFixture" | "dispatchResult">
 
-export interface ValidationFixture {
-  name?: string
-  value: string
-}
-
 export interface ValidationPluginProps {
   validator: ValidatorProxy
   trigger: string | undefined
@@ -62,12 +57,12 @@ export interface Validator {
 
 export class Validator extends EventTarget {
   readonly [$proxy]: ValidatorProxy
-  readonly [$fixtures]: Record<string, ValidationFixture>
+  readonly [$fixtures]: Record<string, any>
   readonly [$plugins]: ValidationPlugin[]
   [$promise]: AbortablePromise<ValidationResult | void> | null
   [$result]: ValidationResult | null
 
-  constructor(fixtures: Record<string, ValidationFixture> = {}, plugins: ValidationPlugin[] = []) {
+  constructor(fixtures: Record<string, any> = {}, plugins: ValidationPlugin[] = []) {
     super()
     this[$proxy] = createReadonlyProxy(this, "result", "findFixture", "getFixture", "dispatchResult")
     this[$fixtures] = fixtures
@@ -84,7 +79,7 @@ export class Validator extends EventTarget {
     return Object.freeze(clone)
   }
 
-  addFixture(fixture: ValidationFixture, name: string = fixture?.name): void {
+  addFixture(fixture: any, name: string = fixture?.name): void {
     if (!name) {
       throw new Error("Fixture must have a name")
     }
@@ -107,7 +102,7 @@ export class Validator extends EventTarget {
     }
   }
 
-  getFixture(name: string): ValidationFixture {
+  getFixture(name: string): any {
     const fixture = this.findFixture(name)
     if (!fixture) {
       throw new Error(`Fixture '${name}' not found`)
@@ -115,7 +110,7 @@ export class Validator extends EventTarget {
     return fixture
   }
 
-  removeFixture(fixture: ValidationFixture | string): void {
+  removeFixture(fixture: any): void {
     let name: string | undefined
     if (typeof fixture === "string") {
       if (this.hasFixture(fixture)) {
