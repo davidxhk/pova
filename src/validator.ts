@@ -60,12 +60,12 @@ export interface Validator {
 
 export class Validator extends EventTarget {
   readonly [$proxy]: ValidatorProxy
-  readonly [$fixtures]: Record<string, any>
+  readonly [$fixtures]: { [key: string]: any }
   readonly [$plugins]: ValidationPlugin[]
   [$promise]: AbortablePromise<ValidationResult | void> | null
   [$result]: ValidationResult | null
 
-  constructor(fixtures: Record<string, any> = {}, plugins: ValidationPlugin[] = []) {
+  constructor(fixtures: { [key: string]: any } = {}, plugins: ValidationPlugin[] = []) {
     super()
     this[$proxy] = createReadonlyProxy(this, "result", "findFixture", "getFixture", "getFixtureValue", "dispatchResult")
     this[$fixtures] = fixtures
