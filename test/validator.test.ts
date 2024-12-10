@@ -196,6 +196,74 @@ describe("class Validator", () => {
     })
   })
 
+  describe("its getFixtureValue method", () => {
+    it("gets the value of a fixture in its fixtures object by name", () => {
+      const fixture = { name: "email", value: "test@example.com" }
+      validator.addFixture(fixture)
+
+      const result = validator.getFixtureValue("email")
+
+      expect(result).toBe(fixture.value)
+    })
+
+    it("uses a given key if one is provided", () => {
+      const fixture = { name: "email", email: "test@example.com" }
+      validator.addFixture(fixture)
+
+      const result = validator.getFixtureValue("email", { key: "email" })
+
+      expect(result).toBe(fixture.email)
+    })
+
+    it("checks if a fixture value matches a primitive type if one is provided", () => {
+      const fixture = { name: "test", value: 1 }
+      validator.addFixture(fixture)
+
+      const result = validator.getFixtureValue("test", { type: "number" })
+
+      expect(result).toBeTypeOf("number")
+      expect(result).toBe(fixture.value)
+    })
+
+    it("checks if a fixture value is an instance of a class if one is provided", () => {
+      class TestClass {}
+      const fixture = { name: "test", value: new TestClass() }
+      validator.addFixture(fixture)
+
+      const result = validator.getFixtureValue("test", { type: TestClass })
+
+      expect(result).toBeInstanceOf(TestClass)
+      expect(result).toBe(fixture.value)
+    })
+
+    it("throws an error if a fixture value does not match a given primitive type", () => {
+      const fixture = { name: "test", value: 1 }
+      validator.addFixture(fixture)
+
+      expect(() => validator.getFixtureValue("test", { type: "string" })).toThrow(TypeError)
+    })
+
+    it("throws an error if a fixture value is not an instance of a given class", () => {
+      class TestClass {}
+      class AnotherClass {}
+      const fixture = { name: "test", value: new TestClass() }
+      validator.addFixture(fixture)
+
+      expect(() => validator.getFixtureValue("test", { type: AnotherClass })).toThrow(TypeError)
+    })
+
+    it("throws an error if a fixture value is not found", () => {
+      const fixture = 1
+      validator.addFixture(fixture, "test")
+
+      expect(() => validator.getFixtureValue("test")).toThrow()
+    })
+
+    it("throws an error if a fixture is not found", () => {
+      expect(() => validator.getFixtureValue("unknown")).toThrow()
+    })
+  })
+
   describe("removeFixture", () => {
     it("removes a fixture from the fixtures object by name", () => {
       const fixture = { name: "email", value: "test@example.com" }
