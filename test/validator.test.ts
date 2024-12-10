@@ -154,6 +154,43 @@ describe("class Validator", () => {
       expect(result).toBe(fixture)
     })
 
+    it("checks if a fixture matches a primitive type if one is provided", () => {
+      const fixture = 1
+      validator.addFixture(fixture, "test")
+
+      const result = validator.getFixture("test", { type: "number" })
+
+      expect(result).toBeTypeOf("number")
+      expect(result).toBe(fixture)
+    })
+
+    it("checks if a fixture is an instance of a class if one is provided", () => {
+      class TestClass {}
+      const fixture = new TestClass()
+      validator.addFixture(fixture, "test")
+
+      const result = validator.getFixture("test", { type: TestClass })
+
+      expect(result).toBeInstanceOf(TestClass)
+      expect(result).toBe(fixture)
+    })
+
+    it("throws an error if a fixture does not match a given primitive type", () => {
+      const fixture = 1
+      validator.addFixture(fixture, "test")
+
+      expect(() => validator.getFixture("test", { type: "string" })).toThrow(TypeError)
+    })
+
+    it("throws an error if a fixture is not an instance of a given class", () => {
+      class TestClass {}
+      class AnotherClass {}
+      const fixture = new TestClass()
+      validator.addFixture(fixture, "test")
+
+      expect(() => validator.getFixture("test", { type: AnotherClass })).toThrow(TypeError)
+    })
+
     it("throws an error if a fixture is not found", () => {
       expect(() => validator.getFixture("unknown")).toThrow()
     })

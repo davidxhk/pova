@@ -1,5 +1,8 @@
+import type { Class, PrimitiveType, PrimitiveTypes } from "./is-type"
+
 import { AbortablePromise } from "./abortable-promise"
 import { createReadonlyProxy } from "./create-readonly-proxy"
+import { isType } from "./is-type"
 import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
 
 export type ValidatorProxy = Pick<Validator, "result" | "findFixture" | "getFixture" | "dispatchResult">
@@ -102,10 +105,22 @@ export class Validator extends EventTarget {
     }
   }
 
-  getFixture(name: string): any {
-    const fixture = this.findFixture(name)
-    if (!fixture) {
+  getFixture(name: string): any
+  getFixture<P extends PrimitiveType>(name: string, options: { type: P }): PrimitiveTypes[P]
+  getFixture<T>(name: string, options: { type: Class<T> }): T
+  getFixture(name: string, options?: { type?: any }): any {
+    const { type } = options || {}
+    if (!this.hasFixture(name)) {
       throw new Error(`Fixture '${name}' not found`)
+    }
+    const fixture = this[$fixtures][name]
+    if (type && !isType(fixture, type)) {
+      switch (typeof type) {
+        case "string":
+          throw new TypeError(`Fixture '${name}' is not type ${type}`)
+        case "function":
+          throw new TypeError(`Fixture '${name}' is not an instance of ${type.name}`)
+      }
     }
     return fixture
   }
