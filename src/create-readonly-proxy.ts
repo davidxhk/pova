@@ -17,7 +17,7 @@ export function createReadonlyProxy(target: { [key: PropertyKey]: any }, ...mask
           return
         }
         const value = Reflect.get(target, prop)
-        return typeof value == "function" ? value.bind(target) : value
+        return typeof value === "function" ? value.bind(target) : value
       },
 
       ownKeys: (target) => {
