@@ -84,9 +84,12 @@ export class Validator extends EventTarget {
     return Object.freeze(clone)
   }
 
-  addFixture(fixture: ValidationFixture, name: string | undefined = fixture.name): void {
+  addFixture(fixture: ValidationFixture, name: string = fixture?.name): void {
     if (!name) {
       throw new Error("Fixture must have a name")
+    }
+    if (typeof name !== "string") {
+      throw new TypeError("Fixture name must be a string")
     }
     if (this.hasFixture(name)) {
       throw new Error(`Fixture '${name}' already exists`)
