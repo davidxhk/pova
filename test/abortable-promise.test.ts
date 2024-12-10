@@ -9,41 +9,48 @@ describe("class AbortablePromise", () => {
     promise = new AbortablePromise(resolve => setTimeout(() => resolve(1)))
   })
 
-  describe("constructor", () => {
-    it("runs the executor", async () => {
-      const executor = vi.fn()
-      void new AbortablePromise(executor)
+  it("resolves with a given value if one is provided", async () => {
+    promise = new AbortablePromise(resolve => resolve(1))
 
-      expect(executor).toHaveBeenCalled()
-    })
+    await expect(promise).resolves.toBe(1)
+  })
 
-    it("passes a resolve function to the executor", async () => {
-      const executor = vi.fn()
-      void new AbortablePromise(executor)
+  it("resolves with an awaited value if a promise-like value is provided", async () => {
+    const value = Promise.resolve(1)
 
-      expect(executor.mock.calls[0].at(0)).toEqual(expect.any(Function))
-    })
+    promise = new AbortablePromise(resolve => resolve(value))
 
-    it("passes a reject function to the executor", async () => {
-      const executor = vi.fn()
-      void new AbortablePromise(executor)
+    await expect(promise).resolves.toBe(1)
+  })
 
-      expect(executor.mock.calls[0].at(1)).toEqual(expect.any(Function))
-    })
-
-    it("passes an abort controller to the executor", async () => {
-      const executor = vi.fn()
-      void new AbortablePromise(executor)
-
-      expect(executor.mock.calls[0].at(2)).toEqual(expect.any(AbortController))
-    })
-
+  describe("its constructor", () => {
     it("initializes with a new abort controller", () => {
       expect(promise[$controller]).toBeInstanceOf(AbortController)
     })
+
+    describe("calls the executor", async () => {
+      const executor = vi.fn()
+      void new AbortablePromise(executor)
+
+      it("once", () => {
+        expect(executor).toHaveBeenCalledOnce()
+      })
+
+      it("passing a resolve function to it", async () => {
+        expect(executor.mock.calls[0].at(0)).toEqual(expect.any(Function))
+      })
+
+      it("passing a reject function to it", async () => {
+        expect(executor.mock.calls[0].at(1)).toEqual(expect.any(Function))
+      })
+
+      it("passing an abort controller to it", async () => {
+        expect(executor.mock.calls[0].at(2)).toEqual(expect.any(AbortController))
+      })
+    })
   })
 
-  describe("get signal", () => {
+  describe("its signal getter", () => {
     it("returns the abort controller signal", () => {
       const signal = promise.signal
 
@@ -51,7 +58,7 @@ describe("class AbortablePromise", () => {
     })
   })
 
-  describe("abort", () => {
+  describe("its abort method", () => {
     it("aborts the abort controller and rejects the promise with an abort error", async () => {
       promise.abort()
 
@@ -67,19 +74,5 @@ describe("class AbortablePromise", () => {
       expect(promise[$controller].signal.reason).toBe(reason)
       await expect(promise).rejects.toThrow(reason)
     })
-  })
-
-  it("resolves with a given value if one is provided", async () => {
-    promise = new AbortablePromise(resolve => resolve(1))
-
-    await expect(promise).resolves.toBe(1)
-  })
-
-  it("resolves with an awaited value if a promise-like value is provided", async () => {
-    const value = Promise.resolve(1)
-
-    promise = new AbortablePromise(resolve => resolve(value))
-
-    await expect(promise).resolves.toBe(1)
   })
 })
