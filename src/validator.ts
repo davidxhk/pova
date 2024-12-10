@@ -125,6 +125,27 @@ export class Validator extends EventTarget {
     return fixture
   }
 
+  getFixtureValue(name: string, options?: { key?: string }): any
+  getFixtureValue<P extends PrimitiveType>(name: string, options: { key?: string, type: P }): PrimitiveTypes[P]
+  getFixtureValue<T>(name: string, options: { key?: string, type: Class<T> }): T
+  getFixtureValue(name: string, options?: { key?: string, type?: any }): any {
+    const { key = "value", type } = options || {}
+    const fixture = this.getFixture(name)
+    if (!(key in fixture)) {
+      throw new Error(`Fixture '${name}' is missing a ${key}`)
+    }
+    const value = fixture[key]
+    if (type && !isType(value, type)) {
+      switch (typeof type) {
+        case "string":
+          throw new TypeError(`Fixture '${name}' ${key} is not type ${type}`)
+        case "function":
+          throw new TypeError(`Fixture '${name}' ${key} is not an instance of ${type.name}`)
+      }
+    }
+    return value
+  }
+
   removeFixture(fixture: any): void {
     let name: string | undefined
     if (typeof fixture === "string") {
