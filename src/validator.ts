@@ -5,7 +5,7 @@ import { createReadonlyProxy } from "./create-readonly-proxy"
 import { isType } from "./is-type"
 import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
 
-export type ValidatorProxy = Pick<Validator, "result" | "findFixture" | "getFixture" | "dispatchResult">
+export type ValidatorProxy = Pick<Validator, "result" | "findFixture" | "getFixture" | "getFixtureValue" | "dispatchResult">
 
 export interface ValidationPluginProps {
   validator: ValidatorProxy
@@ -67,7 +67,7 @@ export class Validator extends EventTarget {
 
   constructor(fixtures: Record<string, any> = {}, plugins: ValidationPlugin[] = []) {
     super()
-    this[$proxy] = createReadonlyProxy(this, "result", "findFixture", "getFixture", "dispatchResult")
+    this[$proxy] = createReadonlyProxy(this, "result", "findFixture", "getFixture", "getFixtureValue", "dispatchResult")
     this[$fixtures] = fixtures
     this[$plugins] = plugins
     this[$promise] = null
