@@ -1,15 +1,13 @@
+import type { Class, PrimitiveType, PrimitiveTypes } from "./is-type"
+
 import { AbortablePromise } from "./abortable-promise"
 import { createReadonlyProxy } from "./create-readonly-proxy"
+import { isType } from "./is-type"
 import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
 
-export type ValidatorProxy = Pick<Validator, "result" | "findFixture" | "getFixture" | "dispatchResult">
+export type ValidatorProxy = Pick<Validator, "result" | "findFixture" | "getFixture" | "getFixtureValue" | "dispatchResult">
 
-export interface ValidationFixture {
-  name?: string
-  value: string
-}
-
-export interface ValidationPluginProps {
+export interface PluginProps {
   validator: ValidatorProxy
   trigger: string | undefined
   result: ValidationResult | null
@@ -18,7 +16,7 @@ export interface ValidationPluginProps {
 
 type Promisable<T> = T | PromiseLike<T>
 
-export type ValidationPlugin = (props: ValidationPluginProps) => Promisable<ValidationResult | void>
+export type ValidationPlugin = (props: PluginProps) => Promisable<ValidationResult | void>
 
 type JSONValue = string | number | boolean | JSONValue[] | { [key: string]: JSONValue }
 
@@ -62,14 +60,14 @@ export interface Validator {
 
 export class Validator extends EventTarget {
   readonly [$proxy]: ValidatorProxy
-  readonly [$fixtures]: Record<string, ValidationFixture>
+  readonly [$fixtures]: { [key: string]: any }
   readonly [$plugins]: ValidationPlugin[]
   [$promise]: AbortablePromise<ValidationResult | void> | null
   [$result]: ValidationResult | null
 
-  constructor(fixtures: Record<string, ValidationFixture> = {}, plugins: ValidationPlugin[] = []) {
+  constructor(fixtures: { [key: string]: any } = {}, plugins: ValidationPlugin[] = []) {
     super()
-    this[$proxy] = createReadonlyProxy(this, "result", "findFixture", "getFixture", "dispatchResult")
+    this[$proxy] = createReadonlyProxy(this, "result", "findFixture", "getFixture", "getFixtureValue", "dispatchResult")
     this[$fixtures] = fixtures
     this[$plugins] = plugins
     this[$promise] = null
@@ -84,39 +82,83 @@ export class Validator extends EventTarget {
     return Object.freeze(clone)
   }
 
-  addFixture(fixture: ValidationFixture, name: string | undefined = fixture.name): void {
+  addFixture(fixture: any, name: string = fixture?.name): void {
     if (!name) {
       throw new Error("Fixture must have a name")
     }
-    if (name in this[$fixtures]) {
+    if (typeof name !== "string") {
+      throw new TypeError("Fixture name must be a string")
+    }
+    if (this.hasFixture(name)) {
       throw new Error(`Fixture '${name}' already exists`)
     }
     this[$fixtures][name] = fixture
   }
 
-  findFixture(name: string): ValidationFixture | undefined {
-    return this[$fixtures][name]
+  hasFixture(name: string): boolean {
+    return name in this[$fixtures]
   }
 
-  getFixture(name: string): ValidationFixture {
-    const fixture = this.findFixture(name)
-    if (!fixture) {
+  findFixture(name: string): any | undefined {
+    if (this.hasFixture(name)) {
+      return this[$fixtures][name]
+    }
+  }
+
+  getFixture(name: string): any
+  getFixture<P extends PrimitiveType>(name: string, options: { type: P }): PrimitiveTypes[P]
+  getFixture<T>(name: string, options: { type: Class<T> }): T
+  getFixture(name: string, options?: { type?: any }): any {
+    const { type } = options || {}
+    if (!this.hasFixture(name)) {
       throw new Error(`Fixture '${name}' not found`)
+    }
+    const fixture = this[$fixtures][name]
+    if (type && !isType(fixture, type)) {
+      switch (typeof type) {
+        case "string":
+          throw new TypeError(`Fixture '${name}' is not type ${type}`)
+        case "function":
+          throw new TypeError(`Fixture '${name}' is not an instance of ${type.name}`)
+      }
     }
     return fixture
   }
 
-  removeFixture(fixture: ValidationFixture | string): void {
+  getFixtureValue(name: string, options?: { key?: string }): any
+  getFixtureValue<P extends PrimitiveType>(name: string, options: { key?: string, type: P }): PrimitiveTypes[P]
+  getFixtureValue<T>(name: string, options: { key?: string, type: Class<T> }): T
+  getFixtureValue(name: string, options?: { key?: string, type?: any }): any {
+    const { key = "value", type } = options || {}
+    const fixture = this.getFixture(name)
+    if (!(key in fixture)) {
+      throw new Error(`Fixture '${name}' is missing a ${key}`)
+    }
+    const value = fixture[key]
+    if (type && !isType(value, type)) {
+      switch (typeof type) {
+        case "string":
+          throw new TypeError(`Fixture '${name}' ${key} is not type ${type}`)
+        case "function":
+          throw new TypeError(`Fixture '${name}' ${key} is not an instance of ${type.name}`)
+      }
+    }
+    return value
+  }
+
+  removeFixture(fixture: any): void {
     let name: string | undefined
     if (typeof fixture === "string") {
-      if (fixture in this[$fixtures]) {
+      if (this.hasFixture(fixture)) {
         name = fixture
       }
     }
     else {
-      const entry = Object.entries(this[$fixtures]).find(entry => fixture === entry[1])
-      if (entry) {
-        name = entry[0]
+      for (const entry of Object.entries(this[$fixtures])) {
+        if (entry[1] === fixture) {
+          name = entry[0]
+          break
+        }
       }
     }
     if (name) {
@@ -172,7 +214,7 @@ export class Validator extends EventTarget {
   }
 }
 
-function resolveValidationPlugin(plugin: ValidationPlugin, props: Omit<ValidationPluginProps, "controller">): AbortablePromise<ValidationResult | void> {
+function resolveValidationPlugin(plugin: ValidationPlugin, props: Omit<PluginProps, "controller">): AbortablePromise<ValidationResult | void> {
   return new AbortablePromise(async (resolve, reject, controller) => {
     try {
       const result = await plugin({ ...props, controller })
@@ -185,11 +227,12 @@ function resolveValidationPlugin(plugin: ValidationPlugin, props: Omit<Validatio
 }
 
 function handleValidationError(error: any): ValidationResult {
-  if (error instanceof DOMException && error.name === "AbortError") {
-    return { state: "aborted", message: `${error}` }
-  }
   if (error instanceof Error) {
-    return { state: "error", message: `${error}` }
+    return { state: isAbortError(error) ? "aborted" : "error", message: `${error}` }
   }
   return { state: "unknown", message: JSON.stringify(error) }
+}
+
+function isAbortError(error: any): boolean {
+  return error instanceof DOMException && error.name === "AbortError"
 }
