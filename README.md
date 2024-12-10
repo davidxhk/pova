@@ -39,8 +39,9 @@ const validator = new Validator()
 3. Register [fixture(s)](#fixtures):
 
 ```javascript
-const usernameInput = document.getElementById("username")
+const usernameInput = document.querySelector("input[name='username']")
 
+// Add fixture with a name
 validator.addFixture(usernameInput)
 ```
 
@@ -49,7 +50,7 @@ validator.addFixture(usernameInput)
 ```javascript
 validator.addPlugin(({ validator }) => {
   // Get fixture value
-  const { value } = validator.getFixture("username")
+  const value = validator.getFixtureValue("username", { type: "string" })
 
   // Check its length
   if (value.length < 3) {
@@ -84,7 +85,7 @@ validator.addEventListener("validation", (event) => {
 
 ### Fixtures
 
-- **Definition**: Fixtures are objects with a unique `name` and a value, e.g., form control elements such as `HTMLInputElement` or custom data sources.
+- **Definition**: Fixtures can be any object from form control elements like `HTMLInputElement` to custom data sources.
 
 - **Purpose**: Fixtures enable plugins to dynamically access multiple data sources in one place during validation.
 
@@ -98,11 +99,11 @@ validator.addEventListener("validation", (event) => {
 
 - **Arguments**: Each plugin has access to the following arguments:
 
-  1. **validator**: To access fixtures via `validator.getFixture()`.
+  1. **validator proxy**: To get fixtures and their values.
 
   2. **trigger**: To check what triggered the validation.
 
-  3. **current result**: To access the current validation state.
+  3. **current result**: To check the current validation state.
 
   4. **abort controller**: To abort the validation or handle interruptions\* during execution.
 
@@ -132,7 +133,7 @@ validator.addEventListener("validation", (event) => {
 
   2. **Performance**: Minimize unnecessary re-renders. Only components that rely on the validation state are updated.
 
-  3. **Flexibility**: Build rich validation interfaces with highly decoupled components. Components can handle validation state updates in their own way without affecting other components.
+  3. **Flexibility**: Build highly decoupled components. Components can handle validation state updates in their own way without affecting other components.
 
 ## Example: Asynchronous Validation
 
@@ -143,24 +144,24 @@ import { Validator } from "pova"
 
 const validator = new Validator()
 
-const emailInput = document.getElementById("email")
+const emailInput = document.querySelector("input[name='email']")
 
 validator.addFixture(emailInput)
 
 validator.addPlugin(async ({ validator }) => {
-  // Get email value or throw an error if fixture not found
-  const { value } = validator.getFixture("email")
+  // Get email value
+  const email = validator.getFixtureValue("email", { type: "string" })
 
   // Check email format using regex
-  if (!EMAIL_REGEX.test(value)) {
+  if (!EMAIL_REGEX.test(email)) {
     return { state: "invalid", message: "Enter a valid email address." }
   }
 
-  // Display pending message
+  // Display pending status
   validator.dispatchResult({ state: "pending", message: "Checking availability..." })
 
   // Check email availability with server request
-  const response = await fetch(`/check-availability?email=${value}`).then(res => res.json())
+  const response = await fetch(`/check-availability?email=${email}`).then(res => res.json())
   if (!response.isAvailable) {
     return { state: "invalid", message: "Email is already in use." }
   }
@@ -199,14 +200,14 @@ import { Validator } from "pova"
 
 const validator = new Validator()
 
-const emailInput = document.getElementById("email")
+const emailInput = document.querySelector("input[name='email']")
 
 validator.addFixture(emailInput)
 
 validator.addPlugin(async ({ validator, controller }) => {
-  const { value } = validator.getFixture("email")
+  const email = validator.getFixtureValue("email", { type: "string" })
 
-  if (!EMAIL_REGEX.test(value)) {
+  if (!EMAIL_REGEX.test(email)) {
     return { state: "invalid", message: "Please enter a valid email address." }
   }
 
@@ -220,7 +221,7 @@ validator.addPlugin(async ({ validator, controller }) => {
 
   validator.dispatchResult({ state: "pending", message: "Checking availability..." })
 
-  const response = await fetch(`/check-availability?email=${value}`).then(res => res.json())
+  const response = await fetch(`/check-availability?email=${email}`).then(res => res.json())
   if (!response.isAvailable) {
     return { state: "invalid", message: "Email is already in use." }
   }
