@@ -96,6 +96,12 @@ describe("class Validator", () => {
       expect(() => validator.addFixture(fixture)).toThrow()
     })
 
+    it("throws an error if given a name that is not a string", () => {
+      const fixture = { name: 1, value: "test" }
+
+      expect(() => validator.addFixture(fixture)).toThrow(TypeError)
+    })
+
     it("throws an error if a fixture already exists for a given name", () => {
       validator = new Validator({ email: { value: "test@example.com" } })
       const fixture = { name: "email", value: "test@example.com" }
