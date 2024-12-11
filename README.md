@@ -1,22 +1,18 @@
 # `pova`
 
-> Flexible validation for interactive forms
+> The form validation framework
 
-`pova` (**P**lugin-**O**riented **VA**lidation) is a lightweight, plugin-based validation framework for building interactive forms with real-time feedback.
+`pova` (**P**lugin-**O**riented **VA**lidation) is a tiny plugin-based validation framework for building interactive forms with real-time feedback.
 
-With `pova`, you can easily create flexible and extensible validation pipelines to handle even your most complex validation requirements.
-
-`pova` gives you full control of your validation process, and allows you to conduct validation on the server-side seamlessly.
-
-Start building interactive forms today with `pova`.
+With `pova`, you can easily create flexible and extensible validation pipelines to handle any validation requirement, whilst maintaining full control of the validation process. You can even conduct validation on the server side seamlessly. Read on to find out more!
 
 ## Key Features
 
 - **Flexible Fixture System**: Register any form control element or custom object as a [fixture](#fixtures) to access it during validation. Validate any data source in real-time.
 
-- **Modular Plugin Architecture**: Tailor your custom validation pipeline with synchronous or asynchronous [plugins](#plugins). Handle anything from simple validations to complex multi-input checks and [server requests](#example-asynchronous-validation), and even [with debouncing](#example-debouncing-server-requests).
+- **Modular Plugin Architecture**: Tailor your custom validation pipeline with any [plugin](#plugins) to define the validation logic you want. Handle anything from simple validations to complex multi-input checks, [server requests](#example-asynchronous-validation), and even [with debouncing](#example-debouncing-server-requests).
 
-- **Event-Driven State Management**: Capture and handle real-time validation changes with [event listeners](#event-driven-state-management). Update your components with the latest validation state and avoid issues like stale data or excessive re-renders.
+- **Event-Driven State Management**: Capture and handle real-time validation changes with [event listeners](#event-driven-state-management) to show feedback to the user. Avoid issues like stale data or excessive re-renders.
 
 - **Framework-Agnostic**: Integrate with any JavaScript framework or even vanilla JS. Zero dependencies required.
 
@@ -45,7 +41,7 @@ const usernameInput = document.querySelector("input[name='username']")
 validator.addFixture(usernameInput)
 ```
 
-4. Define validation logic within [plugin(s)](#plugins):
+4. Define validation logic with [plugin(s)](#plugins):
 
 ```javascript
 validator.addPlugin(({ validator }) => {
@@ -59,27 +55,31 @@ validator.addPlugin(({ validator }) => {
 })
 ```
 
-5. Use [event listeners](#event-driven-state-management) to trigger validations and respond to changes in validation state:
+5. Use [event listeners](#event-driven-state-management) to
 
-```javascript
-// Validate on input event
-usernameInput.addEventListener("input", () => {
-  // Clear previous result
-  validator.reset()
+   - trigger validations:
 
-  // Trigger validation
-  validator.validate("input")
-})
-```
+   ```javascript
+   // Validate on input event
+   usernameInput.addEventListener("input", () => {
+     // Clear previous result
+     validator.reset()
 
-```javascript
-const message = document.getElementById("message")
+     // Trigger validation
+     validator.validate("input")
+   })
+   ```
 
-// Update username message on validation event
-validator.addEventListener("validation", (event) => {
-  message.innerHTML = event.detail.message
-})
-```
+   - respond to changes in validation state:
+
+   ```javascript
+   const message = document.getElementById("message")
+
+   // Update username message on validation event
+   validator.addEventListener("validation", (event) => {
+     message.innerHTML = event.detail.message
+   })
+   ```
 
 ## Core Concepts
 
@@ -89,7 +89,11 @@ validator.addEventListener("validation", (event) => {
 
 - **Purpose**: Fixtures enable plugins to dynamically access multiple data sources in one place during validation.
 
-- **Usage**: Register fixtures with `validator.addFixture()` to make them available for validation.
+- **Usage**:
+
+  1. Register fixtures with `validator.addFixture()` to make them available for validation.
+
+  2. Access fixtures with `validator.getFixture()` or `validator.getFixtureValue()` during validation.
 
 ### Plugins
 
@@ -99,15 +103,15 @@ validator.addEventListener("validation", (event) => {
 
 - **Arguments**: Each plugin has access to the following arguments:
 
-  1. **validator proxy**: To get fixtures and their values.
+  1. **validator**: To get fixtures and their values.
 
   2. **trigger**: To check what triggered the validation.
 
   3. **current result**: To check the current validation state.
 
-  4. **abort controller**: To abort the validation or handle interruptions\* during execution.
+  4. **abort controller**: To abort the validation or handle interruptions during validation\*.
 
-      \* See [abortable promises](#abortable-promises) to learn more.
+     \* See [abortable promises](#abortable-promises) to learn more.
 
 - **Usage**: Register plugins with `validator.addPlugin()` to add them to the validation process.
 
@@ -189,7 +193,7 @@ In this example:
 
 - **Validation trigger**: Input events are used to trigger validation to enable real-time feedback.
 
-- **State management**: The email message is updated on validation to provide immediate feedback.
+- **State management**: The email message is updated on validation to provide feedback to the user immediately.
 
 ## Example: Debouncing Server Requests
 
@@ -249,6 +253,6 @@ What changed in this example:
 
 ## Conclusion
 
-`pova` offers a flexible, framework-agnostic approach to form validation, allowing you to implement custom workflows that fit the needs of your application. Whether you need simple field validation, complex multi-field checks, or debounced server requests, `pova` gives you complete control over how you want your validation to be like.
+`pova` offers a flexible, framework-agnostic approach to form validation, allowing you to implement custom validation pipelines that fit the needs of your application. Whether you need simple field validation, complex multi-field checks, or debounced server requests, `pova` gives you complete control over how you want your validation to be.
 
 Ready to get started? Check out the [**Quick Start**](#quick-start) section above to see how to integrate `pova` into your project. If you have any questions or need further assistance, feel free to open an issue on the [issues page](https://github.com/davidxhk/pova/issues).
