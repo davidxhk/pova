@@ -23,7 +23,7 @@ type JSONValue = string | number | boolean | JSONValue[] | { [key: string]: JSON
 export interface ValidationResult {
   state: string
   message?: string
-  payload?: JSONValue | undefined
+  payload?: JSONValue
 }
 
 export type ValidationEvent = CustomEvent<ValidationResult>
