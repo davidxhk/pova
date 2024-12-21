@@ -1,5 +1,6 @@
 {
   "name": "pova",
+  "type": "module",
   "version": "0.0.0",
   "description": "A plugin-oriented validation framework for building flexible and extensible validation pipelines.",
   "author": "David Xie",
@@ -23,8 +24,18 @@
     "validation pipeline",
     "plugin oriented"
   ],
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "require": {
+      "types": "./dist/index.d.cts",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "/dist"
