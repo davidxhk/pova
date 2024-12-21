@@ -60,7 +60,7 @@ export interface Validator {
 
 export class Validator extends EventTarget {
   readonly [$proxy]: ValidatorProxy
-  readonly [$fixtures]: { [key: string]: any }
+  readonly [$fixtures]: { [key: PropertyKey]: any }
   readonly [$plugins]: ValidationPlugin[]
   [$promise]: AbortablePromise<ValidationResult | void> | null
   [$result]: ValidationResult | null
@@ -82,73 +82,70 @@ export class Validator extends EventTarget {
     return Object.freeze(clone)
   }
 
-  addFixture(fixture: any, name: string = fixture?.name): void {
+  addFixture(fixture: any, name: PropertyKey = fixture?.name): void {
     if (!name) {
       throw new Error("Fixture must have a name")
     }
-    if (typeof name !== "string") {
-      throw new TypeError("Fixture name must be a string")
-    }
     if (this.hasFixture(name)) {
-      throw new Error(`Fixture '${name}' already exists`)
+      throw new Error(`Fixture '${name.toString()}' already exists`)
     }
     this[$fixtures][name] = fixture
   }
 
-  hasFixture(name: string): boolean {
+  hasFixture(name: PropertyKey): boolean {
     return name in this[$fixtures]
   }
 
-  findFixture(name: string): any | undefined {
+  findFixture(name: PropertyKey): any | undefined {
     if (this.hasFixture(name)) {
       return this[$fixtures][name]
     }
   }
 
-  getFixture(name: string): any
-  getFixture<P extends PrimitiveType>(name: string, options: { type: P }): PrimitiveTypes[P]
-  getFixture<T>(name: string, options: { type: Class<T> }): T
-  getFixture(name: string, options?: { type?: any }): any {
+  getFixture(name: PropertyKey): any
+  getFixture<P extends PrimitiveType>(name: PropertyKey, options: { type: P }): PrimitiveTypes[P]
+  getFixture<T>(name: PropertyKey, options: { type: Class<T> }): T
+  getFixture(name: PropertyKey, options?: { type?: any }): any {
     const { type } = options || {}
     if (!this.hasFixture(name)) {
-      throw new Error(`Fixture '${name}' not found`)
+      throw new Error(`Fixture '${name.toString()}' not found`)
     }
     const fixture = this[$fixtures][name]
     if (type && !isType(fixture, type)) {
       switch (typeof type) {
         case "string":
-          throw new TypeError(`Fixture '${name}' is not type ${type}`)
+          throw new TypeError(`Fixture '${name.toString()}' is not type ${type}`)
         case "function":
-          throw new TypeError(`Fixture '${name}' is not an instance of ${type.name}`)
+          throw new TypeError(`Fixture '${name.toString()}' is not an instance of ${type.name}`)
       }
     }
     return fixture
   }
 
-  getFixtureValue(name: string, options?: { key?: string }): any
-  getFixtureValue<P extends PrimitiveType>(name: string, options: { key?: string, type: P }): PrimitiveTypes[P]
-  getFixtureValue<T>(name: string, options: { key?: string, type: Class<T> }): T
-  getFixtureValue(name: string, options?: { key?: string, type?: any }): any {
+  getFixtureValue(name: PropertyKey, options?: { key?: string }): any
+  getFixtureValue<P extends PrimitiveType>(name: PropertyKey, options: { key?: string, type: P }): PrimitiveTypes[P]
+  getFixtureValue<T>(name: PropertyKey, options: { key?: string, type: Class<T> }): T
+  getFixtureValue(name: PropertyKey, options?: { key?: string, type?: any }): any {
     const { key = "value", type } = options || {}
     const fixture = this.getFixture(name)
     if (!(key in fixture)) {
-      throw new Error(`Fixture '${name}' is missing a ${key}`)
+      throw new Error(`Fixture '${name.toString()}' is missing a ${key}`)
     }
     const value = fixture[key]
     if (type && !isType(value, type)) {
       switch (typeof type) {
         case "string":
-          throw new TypeError(`Fixture '${name}' ${key} is not type ${type}`)
+          throw new TypeError(`Fixture '${name.toString()}' ${key} is not type ${type}`)
         case "function":
-          throw new TypeError(`Fixture '${name}' ${key} is not an instance of ${type.name}`)
+          throw new TypeError(`Fixture '${name.toString()}' ${key} is not an instance of ${type.name}`)
       }
     }
     return value
   }
 
   removeFixture(fixture: any): void {
-    let name: string | undefined
-    if (typeof fixture === "string") {
+    let name: PropertyKey | undefined
+    if (typeof fixture === "string" || typeof fixture === "number" || typeof fixture === "symbol") {
       if (this.hasFixture(fixture)) {
         name = fixture
       }

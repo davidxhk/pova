@@ -178,16 +178,27 @@ describe("class Validator", () => {
       expect(validator[$fixtures].test).toBe(fixture)
     })
 
+    it("supports using a number as a name", () => {
+      const fixture = { name: "email", value: "test@example.com" }
+
+      validator.addFixture(fixture, 1)
+
+      expect(validator[$fixtures][1]).toBe(fixture)
+    })
+
+    it("supports using a symbol as a name", () => {
+      const sym = Symbol("test")
+      const fixture = { name: "email", value: "test@example.com" }
+
+      validator.addFixture(fixture, sym)
+
+      expect(validator[$fixtures][sym]).toBe(fixture)
+    })
+
     it("throws an error if no name is provided", () => {
       const fixture = { value: "test@example.com" }
 
       expect(() => validator.addFixture(fixture)).toThrow()
-    })
-
-    it("throws an error if given a name that is not a string", () => {
-      const fixture = { name: 1, value: "test" }
-
-      expect(() => validator.addFixture(fixture)).toThrow(TypeError)
     })
 
     it("throws an error if a fixture already exists for a given name", () => {
