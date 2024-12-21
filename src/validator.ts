@@ -143,24 +143,20 @@ export class Validator extends EventTarget {
     return value
   }
 
-  removeFixture(fixture: any): void {
+  removeFixture(name: PropertyKey): boolean
+  removeFixture(fixture: any): boolean
+  removeFixture(value: any): boolean {
     let name: PropertyKey | undefined
-    if (typeof fixture === "string" || typeof fixture === "number" || typeof fixture === "symbol") {
-      if (this.hasFixture(fixture)) {
-        name = fixture
-      }
+    if (!["string", "number", "symbol"].includes(typeof value)) {
+      name = Object.keys(this[$fixtures]).find(name => this[$fixtures][name] === value)
     }
-    else {
-      for (const entry of Object.entries(this[$fixtures])) {
-        if (entry[1] === fixture) {
-          name = entry[0]
-          break
-        }
-      }
+    else if (this.hasFixture(value)) {
+      name = value
     }
-    if (name) {
-      delete this[$fixtures][name]
+    if (name === undefined) {
+      return false
     }
+    return delete this[$fixtures][name]
   }
 
   addPlugin(plugin: ValidationPlugin): void {
