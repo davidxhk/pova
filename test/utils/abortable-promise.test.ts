@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { AbortablePromise } from "../src/abortable-promise"
-import { $controller } from "../src/symbols"
+import { $controller } from "../../src/symbols"
+import { AbortablePromise } from "../../src/utils"
 
 describe("class AbortablePromise", () => {
   let promise: AbortablePromise<any>

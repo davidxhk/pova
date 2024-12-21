@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { AbortablePromise } from "../src/abortable-promise"
 import { $fixtures, $plugins, $promise, $proxy, $result } from "../src/symbols"
+import { AbortablePromise } from "../src/utils"
 import { Validator } from "../src/validator"
 
 describe("class Validator", () => {
