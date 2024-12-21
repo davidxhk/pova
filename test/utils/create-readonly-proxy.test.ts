@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { createReadonlyProxy } from "../src/create-readonly-proxy"
+import { createReadonlyProxy } from "../../src/utils"
 
 describe("function createReadonlyProxy", () => {
   it("creates a readonly proxy for a given object", () => {

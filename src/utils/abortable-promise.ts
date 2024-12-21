@@ -1,4 +1,4 @@
-import { $controller } from "./symbols"
+import { $controller } from "../symbols"
 
 export class AbortablePromise<T> extends Promise<T> {
   static get [Symbol.species](): any {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isType } from "../src/is-type"
+import { isType } from "../../src/utils"
 
 describe("function isType", () => {
   it("returns true if the value matches the given primitive type", () => {
