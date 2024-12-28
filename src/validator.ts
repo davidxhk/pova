@@ -1,6 +1,6 @@
-import type { AbortablePromise, ClassType, PrimitiveType, PrimitiveTypes, ValidationPlugin, ValidationResult, ValidatorProxy } from "./types"
-import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
-import { createReadonlyProxy, handleValidationError, isType, resolveValidationPlugin } from "./utils"
+import type { AbortablePromise, ClassType, PrimitiveType, PrimitiveTypes, ValidationPlugin, ValidationResult } from "./types"
+import { $fixtures, $plugins, $promise, $result } from "./symbols"
+import { createReadonlyProxy, createValidatorProxy, handleValidationError, isType, resolveValidationPlugin } from "./utils"
 
 interface ValidationEventMap {
   validation: CustomEvent<ValidationResult>
@@ -33,7 +33,6 @@ export interface Validator {
 }
 
 export class Validator extends EventTarget {
-  readonly [$proxy]: ValidatorProxy
   readonly [$fixtures]: { [key: PropertyKey]: any }
   readonly [$plugins]: ValidationPlugin[]
   [$promise]: AbortablePromise<ValidationResult | void> | null
@@ -41,7 +40,6 @@ export class Validator extends EventTarget {
 
   constructor(fixtures: { [key: string]: any } = {}) {
     super()
-    this[$proxy] = createReadonlyProxy(this, ["result", "hasFixture", "findFixture", "getFixture", "getFixtureValue", "dispatchResult"])
     this[$fixtures] = fixtures
     this[$plugins] = []
     this[$promise] = null
@@ -162,11 +160,13 @@ export class Validator extends EventTarget {
 
   async validate(trigger?: string): Promise<ValidationResult | null> {
     this.abort(`revalidation${trigger ? ` triggered by ${trigger}` : ""}`)
+
+    const validator = createValidatorProxy(this)
     let result = this[$result]
 
     for (const plugin of this[$plugins]) {
       try {
-        this[$promise] = resolveValidationPlugin(plugin, { validator: this[$proxy], trigger, result })
+        this[$promise] = resolveValidationPlugin(plugin, { validator, trigger, result })
         result = (await this[$promise]) || result
       }
 
