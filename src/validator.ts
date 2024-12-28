@@ -72,12 +72,12 @@ export class Validator extends EventTarget {
     this[$result] = null
   }
 
-  get result(): ValidationResult | null {
+  get result(): Readonly<ValidationResult> | null {
     if (!this[$result]) {
       return null
     }
-    const clone = Object.assign({}, this[$result])
-    return Object.freeze(clone)
+
+    return createReadonlyProxy(this[$result])
   }
 
   addFixture(fixture: any, name: PropertyKey = fixture?.name): void {
@@ -187,19 +187,22 @@ export class Validator extends EventTarget {
   async validate(trigger?: string): Promise<ValidationResult | null> {
     this.abort(`revalidation${trigger ? ` triggered by ${trigger}` : ""}`)
     let result = this[$result]
+
     for (const plugin of this[$plugins]) {
       try {
         this[$promise] = resolveValidationPlugin(plugin, { validator: this[$proxy], trigger, result })
         result = (await this[$promise]) || result
       }
+
       catch (error) {
-        result = handleValidationError(error)
-        return result
+        return handleValidationError(error)
       }
+
       finally {
         this[$promise] = null
       }
     }
+
     this.dispatchResult(result)
     return result
   }
