@@ -1,4 +1,5 @@
 export * from "./create-abort-error"
+export * from "./create-fixtures-proxy"
 export * from "./create-readonly-proxy"
 export * from "./create-validator-proxy"
 export * from "./handle-validation-error"

@@ -1,6 +1,6 @@
 import type { AbortablePromise, FixtureStore, ValidationPlugin, ValidationResult } from "./types"
 import { $fixtures, $plugins, $promise, $result } from "./symbols"
-import { createReadonlyProxy, createValidatorProxy, handleValidationError, resolveValidationPlugin } from "./utils"
+import { createFixturesProxy, createReadonlyProxy, createValidatorProxy, handleValidationError, resolveValidationPlugin } from "./utils"
 import { ValidationSource } from "./validation-source"
 
 export class Validator extends ValidationSource<ValidationResult | null> {
@@ -55,12 +55,13 @@ export class Validator extends ValidationSource<ValidationResult | null> {
   async validate(trigger?: string): Promise<ValidationResult | null> {
     this.abort(`revalidation${trigger ? ` triggered by ${trigger}` : ""}`)
 
+    const fixtures = createFixturesProxy(this[$fixtures])
     const validator = createValidatorProxy(this)
     let result = this[$result]
 
     for (const plugin of this[$plugins]) {
       try {
-        this[$promise] = resolveValidationPlugin(plugin, { validator, trigger, result })
+        this[$promise] = resolveValidationPlugin(plugin, { fixtures, validator, trigger, result })
         result = (await this[$promise]) || result
       }
 
