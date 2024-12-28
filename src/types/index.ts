@@ -1,4 +1,5 @@
 export type * from "../abortable-promise"
+export type * from "../validation-source"
 export type * from "../validator"
 export type * from "./class-type"
 export type * from "./json-value"

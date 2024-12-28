@@ -1,38 +1,9 @@
 import type { AbortablePromise, ClassType, PrimitiveType, PrimitiveTypes, ValidationPlugin, ValidationResult } from "./types"
 import { $fixtures, $plugins, $promise, $result } from "./symbols"
 import { createReadonlyProxy, createValidatorProxy, handleValidationError, isType, resolveValidationPlugin } from "./utils"
+import { ValidationSource } from "./validation-source"
 
-interface ValidationEventMap {
-  validation: CustomEvent<ValidationResult>
-}
-
-export interface Validator {
-  addEventListener<K extends keyof ValidationEventMap>(
-    type: K,
-    listener: (this: Validator, ev: ValidationEventMap[K]) => void,
-    options?: boolean | AddEventListenerOptions
-  ): void
-
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions
-  ): void
-
-  removeEventListener<K extends keyof ValidationEventMap>(
-    type: K,
-    listener: (this: Validator, ev: ValidationEventMap[K]) => void,
-    options?: boolean | EventListenerOptions
-  ): void
-
-  removeEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions
-  ): void
-}
-
-export class Validator extends EventTarget {
+export class Validator extends ValidationSource<ValidationResult | null> {
   readonly [$fixtures]: { [key: PropertyKey]: any }
   readonly [$plugins]: ValidationPlugin[]
   [$promise]: AbortablePromise<ValidationResult | void> | null
@@ -144,7 +115,7 @@ export class Validator extends EventTarget {
 
   dispatchResult(result: ValidationResult | null): void {
     this[$result] = result
-    this.dispatchEvent(new CustomEvent("validation", { detail: result }))
+    this.dispatchValidationEvent(result)
   }
 
   abort(reason?: string): void {
