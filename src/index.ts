@@ -1,5 +1,5 @@
 export { FixtureStore } from "./fixture-store"
 export type * from "./types"
-export { defineRegistry } from "./utils"
+export { defineRegistry, resetAll, validateAll } from "./utils"
 export { Validator } from "./validator"
 export { ValidatorHub } from "./validator-hub"
