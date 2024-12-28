@@ -1,6 +1,7 @@
 import type { ClassType, PrimitiveType, PrimitiveTypes } from "./utils"
+import { AbortablePromise } from "./abortable-promise"
 import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
-import { AbortablePromise, createReadonlyProxy, isType } from "./utils"
+import { createReadonlyProxy, isType } from "./utils"
 
 export type ValidatorProxy = Pick<Validator, "result" | "hasFixture" | "findFixture" | "getFixture" | "getFixtureValue" | "dispatchResult">
 
