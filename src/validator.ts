@@ -1,33 +1,10 @@
-import type { ClassType, PrimitiveType, PrimitiveTypes } from "./utils"
+import type { ClassType, PluginProps, PrimitiveType, PrimitiveTypes, ValidationPlugin, ValidationResult, ValidatorProxy } from "./types"
 import { AbortablePromise } from "./abortable-promise"
 import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
 import { createReadonlyProxy, isType } from "./utils"
 
-export type ValidatorProxy = Pick<Validator, "result" | "hasFixture" | "findFixture" | "getFixture" | "getFixtureValue" | "dispatchResult">
-
-export interface PluginProps {
-  validator: ValidatorProxy
-  trigger: string | undefined
-  result: ValidationResult | null
-  controller: AbortController
-}
-
-type Promisable<T> = T | PromiseLike<T>
-
-export type ValidationPlugin = (props: PluginProps) => Promisable<ValidationResult | void>
-
-type JSONValue = string | number | boolean | JSONValue[] | { [key: string]: JSONValue }
-
-export interface ValidationResult {
-  state: string
-  message?: string
-  payload?: JSONValue
-}
-
-export type ValidationEvent = CustomEvent<ValidationResult>
-
 interface ValidationEventMap {
-  validation: ValidationEvent
+  validation: CustomEvent<ValidationResult>
 }
 
 export interface Validator {
