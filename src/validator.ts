@@ -1,5 +1,4 @@
-import type { Class, PrimitiveType, PrimitiveTypes } from "./utils"
-
+import type { ClassType, PrimitiveType, PrimitiveTypes } from "./utils"
 import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
 import { AbortablePromise, createReadonlyProxy, isType } from "./utils"
 
@@ -102,7 +101,7 @@ export class Validator extends EventTarget {
 
   getFixture(name: PropertyKey): any
   getFixture<P extends PrimitiveType>(name: PropertyKey, options: { type: P }): PrimitiveTypes[P]
-  getFixture<T>(name: PropertyKey, options: { type: Class<T> }): T
+  getFixture<T>(name: PropertyKey, options: { type: ClassType<T> }): T
   getFixture(name: PropertyKey, options?: { type?: any }): any {
     const { type } = options || {}
     if (!this.hasFixture(name)) {
@@ -122,7 +121,7 @@ export class Validator extends EventTarget {
 
   getFixtureValue(name: PropertyKey, options?: { key?: string }): any
   getFixtureValue<P extends PrimitiveType>(name: PropertyKey, options: { key?: string, type: P }): PrimitiveTypes[P]
-  getFixtureValue<T>(name: PropertyKey, options: { key?: string, type: Class<T> }): T
+  getFixtureValue<T>(name: PropertyKey, options: { key?: string, type: ClassType<T> }): T
   getFixtureValue(name: PropertyKey, options?: { key?: string, type?: any }): any {
     const { key = "value", type } = options || {}
     const fixture = this.getFixture(name)
