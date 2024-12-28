@@ -1,2 +1,6 @@
+export * from "./create-abort-error"
 export * from "./create-readonly-proxy"
+export * from "./handle-validation-error"
+export * from "./is-abort-error"
 export * from "./is-type"
+export * from "./resolve-validation-plugin"

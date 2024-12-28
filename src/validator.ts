@@ -1,7 +1,6 @@
-import type { ClassType, PluginProps, PrimitiveType, PrimitiveTypes, ValidationPlugin, ValidationResult, ValidatorProxy } from "./types"
-import { AbortablePromise } from "./abortable-promise"
+import type { AbortablePromise, ClassType, PrimitiveType, PrimitiveTypes, ValidationPlugin, ValidationResult, ValidatorProxy } from "./types"
 import { $fixtures, $plugins, $promise, $proxy, $result } from "./symbols"
-import { createReadonlyProxy, isType } from "./utils"
+import { createReadonlyProxy, handleValidationError, isType, resolveValidationPlugin } from "./utils"
 
 interface ValidationEventMap {
   validation: CustomEvent<ValidationResult>
@@ -183,27 +182,4 @@ export class Validator extends EventTarget {
     this.dispatchResult(result)
     return result
   }
-}
-
-function resolveValidationPlugin(plugin: ValidationPlugin, props: Omit<PluginProps, "controller">): AbortablePromise<ValidationResult | void> {
-  return new AbortablePromise(async (resolve, reject, controller) => {
-    try {
-      const result = await plugin({ ...props, controller })
-      resolve(result)
-    }
-    catch (error) {
-      reject(error)
-    }
-  })
-}
-
-function handleValidationError(error: any): ValidationResult {
-  if (error instanceof Error) {
-    return { state: isAbortError(error) ? "aborted" : "error", message: `${error}` }
-  }
-  return { state: "unknown", message: JSON.stringify(error) }
-}
-
-function isAbortError(error: any): boolean {
-  return error instanceof DOMException && error.name === "AbortError"
 }
