@@ -63,11 +63,11 @@ export class Validator extends EventTarget {
   [$promise]: AbortablePromise<ValidationResult | void> | null
   [$result]: ValidationResult | null
 
-  constructor(fixtures: { [key: string]: any } = {}, plugins: ValidationPlugin[] = []) {
+  constructor(fixtures: { [key: string]: any } = {}) {
     super()
     this[$proxy] = createReadonlyProxy(this, ["result", "hasFixture", "findFixture", "getFixture", "getFixtureValue", "dispatchResult"])
     this[$fixtures] = fixtures
-    this[$plugins] = plugins
+    this[$plugins] = []
     this[$promise] = null
     this[$result] = null
   }
