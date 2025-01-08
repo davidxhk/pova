@@ -2,7 +2,7 @@
   "name": "pova",
   "type": "module",
   "version": "0.0.0",
-  "description": "A plugin-oriented validation framework for building flexible and extensible validation pipelines.",
+  "description": "The plugin-oriented validation framework for building great forms with real-time user feedback.",
   "author": "David Xie",
   "license": "MIT",
   "homepage": "https://github.com/davidxhk/pova#readme",
