@@ -1,16 +1,18 @@
-import type { AbortablePromise, FixtureStore, ValidationPlugin, ValidationResult } from "./types"
-import { $fixtures, $plugins, $promise, $result } from "./symbols"
+import type { AbortablePromise, FixtureStore, PartialFactoryProps, ValidationPlugin, ValidationResult } from "./types"
+import { $fixtures, $plugins, $promise, $props, $result } from "./symbols"
 import { createFixturesProxy, createReadonlyProxy, createValidatorProxy, handleValidationError, resolveValidationPlugin } from "./utils"
 import { ValidationSource } from "./validation-source"
 
-export class Validator extends ValidationSource<ValidationResult | null> {
+export class Validator<P extends PartialFactoryProps = {}> extends ValidationSource<ValidationResult | null> {
+  readonly [$props]: P
   readonly [$fixtures]: FixtureStore
   readonly [$plugins]: ValidationPlugin[]
   [$promise]: AbortablePromise<ValidationResult | void> | null
   [$result]: ValidationResult | null
 
-  constructor(fixtures: FixtureStore) {
+  constructor(fixtures: FixtureStore, defaultProps = {} as Readonly<P>) {
     super()
+    this[$props] = defaultProps
     this[$fixtures] = fixtures
     this[$plugins] = []
     this[$promise] = null
