@@ -1,3 +1,4 @@
+export * from "./check-preconditions"
 export * from "./create-abort-error"
 export * from "./create-fixtures-proxy"
 export * from "./create-readonly-proxy"
