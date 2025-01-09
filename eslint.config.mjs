@@ -14,6 +14,7 @@ export default antfu({
   },
   rules: {
     "ts/method-signature-style": "off",
+    "ts/no-empty-object-type": "off",
     "ts/no-unsafe-declaration-merging": "off",
     "valid-typeof": "off",
   },
