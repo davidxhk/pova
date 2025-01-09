@@ -19,30 +19,6 @@ export class Validator<P extends PartialFactoryProps = {}> extends ValidationSou
     this[$result] = null
   }
 
-  get result(): Readonly<ValidationResult> | null {
-    if (!this[$result]) {
-      return null
-    }
-
-    return createReadonlyProxy(this[$result])
-  }
-
-  addPlugin(plugin: ValidationPlugin): void {
-    this[$plugins].push(plugin)
-  }
-
-  removePlugin(plugin: ValidationPlugin): void {
-    const index = this[$plugins].indexOf(plugin)
-    if (index > -1) {
-      this[$plugins].splice(index, 1)
-    }
-  }
-
-  dispatchResult(result: ValidationResult | null): void {
-    this[$result] = result
-    this.dispatchValidationEvent(result)
-  }
-
   abort(reason?: string): void {
     if (this[$promise]) {
       this[$promise].abort(reason)
@@ -52,6 +28,19 @@ export class Validator<P extends PartialFactoryProps = {}> extends ValidationSou
   reset(): void {
     this.abort("reset")
     this.dispatchResult(null)
+  }
+
+  get result(): Readonly<ValidationResult> | null {
+    if (!this[$result]) {
+      return null
+    }
+
+    return createReadonlyProxy(this[$result])
+  }
+
+  dispatchResult(result: ValidationResult | null): void {
+    this[$result] = result
+    this.dispatchValidationEvent(result)
   }
 
   async validate(trigger?: string): Promise<ValidationResult | null> {
