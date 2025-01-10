@@ -1,258 +1,255 @@
-# `pova`
+# pova
 
-> The form validation framework
+pova is the <ins>p</ins>lugin-<ins>o</ins>riented <ins>va</ins>lidation framework for building great forms with real-time user feedback.
 
-`pova` (**P**lugin-**O**riented **VA**lidation) is a tiny plugin-based validation framework for building interactive forms with real-time feedback.
-
-With `pova`, you can easily create flexible and extensible validation pipelines to handle any validation requirement, whilst maintaining full control of the validation process. You can even conduct validation on the server side seamlessly. Read on to find out more!
+Whether you’re crafting a simple sign-up form or a complex multi-step wizard, pova offers a **simple yet powerful approach** to client-side form validation with no external dependencies required.
 
 ## Key Features
 
-- **Flexible Fixture System**: Register any form control element or custom object as a [fixture](#fixtures) to access it during validation. Validate any data source in real-time.
+🎯 ***Straightforward, intuitive process***\
+pova is designed to minimize complexity and reduce cognitive load to help you streamline your validation workflow.
 
-- **Modular Plugin Architecture**: Tailor your custom validation pipeline with any [plugin](#plugins) to define the validation logic you want. Handle anything from simple validations to complex multi-input checks, [server requests](#example-asynchronous-validation), and even [with debouncing](#example-debouncing-server-requests).
+🔌 ***Extensible plugin-based architecture***\
+pova allows you to tap into an ecosystem of plugin libraries or configure your own custom plugins to handle a wide range of tasks.
 
-- **Event-Driven State Management**: Capture and handle real-time validation changes with [event listeners](#event-driven-state-management) to show feedback to the user. Avoid issues like stale data or excessive re-renders.
+📋 ***Declarative object-based validation***\
+pova enables you to describe your validation rules using plain old JavaScript objects, promoting clean and maintainable code.
 
-- **Framework-Agnostic**: Integrate with any JavaScript framework or even vanilla JS. Zero dependencies required.
+🟦 ***First-class TypeScript support***\
+pova provides full TypeScript support to power IntelliSense suggestions for all the plugins that you have defined.
+
+## Installation
+
+Install `pova` and its default plugin library, `pova-plugins` (optional), using your preferred package manager:
+
+```bash
+npm install pova pova-plugins
+```
 
 ## Quick Start
 
-1. Install via npm:
+### 1. Define your plugin registry
 
-```bash
-npm install pova
+Import a plugin library into your [plugin registry](docs/faq.md#plugin-registry):
+
+```typescript
+import { defineRegistry } from "pova"
+import * as defaultPlugins from "pova-plugins"
+
+const pluginRegistry = defineRegistry({ ...defaultPlugins })
 ```
 
-2. Create `Validator` instance:
+and/or create your own [plugin factories](docs/faq.md#plugin-factory):
 
-```javascript
-import { Validator } from "pova"
+```typescript
+import { defineRegistry } from "pova"
+import * as defaultPlugins from "pova-plugins"
 
-const validator = new Validator()
+const pluginRegistry = defineRegistry({
+  ...defaultPlugins,
+
+  required({ fixture }) {
+    return ({ fixtures }) => {
+      const value = fixtures.getFixtureValue(fixture)
+      return value === ""
+    }
+  },
+})
 ```
 
-3. Register [fixture(s)](#fixtures):
+### 2. Create a fixture store
 
-```javascript
+Create an empty [fixture store](docs/faq.md#fixture-store):
+
+```typescript
+import { FixtureStore } from "pova"
+
+const fixtureStore = new FixtureStore()
+```
+
+or provide some initial [fixtures](docs/faq.md#fixture):
+
+```typescript
+import { FixtureStore } from "pova"
+
+const initialFixtures = {
+  email: {
+    value: "test@example.com"
+  }
+}
+
+const fixtureStore = new FixtureStore(initialFixtures)
+```
+
+### 3. Add fixtures to your fixture store
+
+Add an object that has a name:
+
+```typescript
 const usernameInput = document.querySelector("input[name='username']")
 
-// Add fixture with a name
-validator.addFixture(usernameInput)
+fixtureStore.addFixture(usernameInput)
 ```
 
-4. Define validation logic with [plugin(s)](#plugins):
+or provide a custom name:
 
-```javascript
-validator.addPlugin(({ validator }) => {
-  // Get fixture value
-  const value = validator.getFixtureValue("username", { type: "string" })
+```typescript
+const passwordInput = document.querySelector("input[type='password']")
 
-  // Check its length
-  if (value.length < 3) {
-    return { state: "invalid", message: "Username must be at least 3 characters." }
-  }
-})
+fixtureStore.addFixture(passwordInput, "password")
 ```
 
-5. Use [event listeners](#event-driven-state-management) to
+### 4. Create a validator
 
-   - trigger validations:
+Create a [validator](docs/faq.md#validator) using your fixture store:
 
-   ```javascript
-   // Validate on input event
-   usernameInput.addEventListener("input", () => {
-     // Clear previous result
-     validator.reset()
-
-     // Trigger validation
-     validator.validate("input")
-   })
-   ```
-
-   - respond to changes in validation state:
-
-   ```javascript
-   const message = document.getElementById("message")
-
-   // Update username message on validation event
-   validator.addEventListener("validation", (event) => {
-     message.innerHTML = event.detail.message
-   })
-   ```
-
-## Core Concepts
-
-### Fixtures
-
-- **Definition**: Fixtures can be any object from form control elements like `HTMLInputElement` to custom data sources.
-
-- **Purpose**: Fixtures enable plugins to dynamically access multiple data sources in one place during validation.
-
-- **Usage**:
-
-  1. Register fixtures with `validator.addFixture()` to make them available for validation.
-
-  2. Access fixtures with `validator.getFixture()` or `validator.getFixtureValue()` during validation.
-
-### Plugins
-
-- **Definition**: Plugins are middleware that are executed sequentially during validation.
-
-- **Purpose**: Plugins perform simple or complex validation tasks, synchronously or asynchronously, to determine the final validation result.
-
-- **Arguments**: Each plugin has access to the following arguments:
-
-  1. **validator**: To get fixtures and their values.
-
-  2. **trigger**: To check what triggered the validation.
-
-  3. **current result**: To check the current validation state.
-
-  4. **abort controller**: To abort the validation or handle interruptions during validation\*.
-
-     \* See [abortable promises](#abortable-promises) to learn more.
-
-- **Usage**: Register plugins with `validator.addPlugin()` to add them to the validation process.
-
-### Abortable Promises
-
-- **Definition**: Abortable promises are promises that can be aborted during execution.
-
-- **Purpose**: Abortable promises are used to resolve each plugin during validation.
-
-- **Context**: When a new validation process begins, any plugin that is currently running will be aborted. This allows validations to be **debounced**\*.
-
-  \* See [this example](#example-debouncing-server-requests) to learn more.
-
-### Event-Driven State Management
-
-- **Definition**: Event-driven state management is a way of handling state updates by sending out custom events whenever the state changes.
-
-- **Purpose**: Components can listen for and act on state changes using event listeners.
-
-- **Benefits**:
-
-  1. **Efficiency**: No complex state management required. Components that rely on the validation state are automatically updated.
-
-  2. **Performance**: Minimize unnecessary re-renders. Only components that rely on the validation state are updated.
-
-  3. **Flexibility**: Build highly decoupled components. Components can handle validation state updates in their own way without affecting other components.
-
-## Example: Asynchronous Validation
-
-This example demonstrates how to use `pova` for asynchronous server-side validation, such as checking the availability of an email address.
-
-```javascript
+```typescript
 import { Validator } from "pova"
 
-const validator = new Validator()
+const validator = new Validator(fixtureStore)
+```
 
-const emailInput = document.querySelector("input[name='email']")
+or use a [validator hub](docs/faq.md#validator-hub) to create one with a name:
 
-validator.addFixture(emailInput)
+```typescript
+import { ValidatorHub } from "pova"
 
-validator.addPlugin(async ({ validator }) => {
-  // Get email value
-  const email = validator.getFixtureValue("email", { type: "string" })
+const validatorHub = new ValidatorHub(fixtureStore)
 
-  // Check email format using regex
-  if (!EMAIL_REGEX.test(email)) {
-    return { state: "invalid", message: "Enter a valid email address." }
-  }
+const usernameValidator = validatorHub.createValidator("username")
+```
 
-  // Display pending status
-  validator.dispatchResult({ state: "pending", message: "Checking availability..." })
+### 5. Add plugins to your validator
 
-  // Check email availability with server request
-  const response = await fetch(`/check-availability?email=${email}`).then(res => res.json())
-  if (!response.isAvailable) {
-    return { state: "invalid", message: "Email is already in use." }
-  }
+Add a plugin using a [plugin config](docs/faq.md#plugin-config) and your plugin registry:
 
-  return { state: "valid", message: "Email is available." }
-})
+```typescript
+usernameValidator.addPlugin({
+  type: "required",
+  fixture: "username",
+  result: "invalid",
+  message: "Please enter your username."
+}, pluginRegistry)
+```
 
-emailInput.addEventListener("input", () => {
-  validator.reset()
-  validator.validate("input")
-})
+or add multiple plugins with default [plugin factory props](docs/faq.md#plugin-factory-props):
 
-const message = document.getElementById("message")
+```typescript
+const defaultProps = {
+  fixture: "username",
+  result: "invalid"
+}
 
-validator.addEventListener("validation", (event) => {
-  message.innerHTML = event.detail.message
+usernameValidator.addPlugins([
+  { type: "required", message: "Please enter your username." },
+  { type: "length", gt: 8, message: "Username must be longer than 8 characters." },
+  { result: "valid" }
+], pluginRegistry, defaultProps)
+```
+
+which can also be provided when creating a validator:
+
+```typescript
+const defaultProps = {
+  fixture: "username",
+  result: "invalid"
+}
+
+const usernameValidator = new Validator(fixtureStore, defaultProps)
+
+usernameValidator.addPlugins([
+  { type: "required", message: "Please enter your username." },
+  { type: "length", gt: 8, message: "Username must be longer than 8 characters." },
+  { result: "valid" }
+], pluginRegistry)
+```
+
+### 6. Setup validation triggers
+
+Trigger a single validator:
+
+```typescript
+usernameInput.addEventListener("input", () => {
+  usernameValidator.reset()
+  usernameValidator.validate("input")
 })
 ```
 
-In this example:
+or [validators linked to a fixture](docs/faq.md#validators-linked-to-fixtures):
 
-- **Fixture**: The email input is registered as a [fixture](#fixtures).
+```typescript
+import { resetAll, validateAll } from "pova"
 
-- **Plugin**: A [plugin](#plugins) is added to validate the email format and make a server request to check if the email is available.
-
-- **Validation trigger**: Input events are used to trigger validation to enable real-time feedback.
-
-- **State management**: The email message is updated on validation to provide feedback to the user immediately.
-
-## Example: Debouncing Server Requests
-
-This example demonstrates how to use `pova` to debounce server requests until the user stops typing to minimize server load and improve responsiveness.
-
-```javascript
-import { Validator } from "pova"
-
-const validator = new Validator()
-
-const emailInput = document.querySelector("input[name='email']")
-
-validator.addFixture(emailInput)
-
-validator.addPlugin(async ({ validator, controller }) => {
-  const email = validator.getFixtureValue("email", { type: "string" })
-
-  if (!EMAIL_REGEX.test(email)) {
-    return { state: "invalid", message: "Please enter a valid email address." }
-  }
-
-  // Add a debounce delay before checking availability
-  await new Promise(resolve => setTimeout(resolve, 500))
-
-  // Exit early if the plugin has been aborted
-  if (controller.signal.aborted) {
-    return
-  }
-
-  validator.dispatchResult({ state: "pending", message: "Checking availability..." })
-
-  const response = await fetch(`/check-availability?email=${email}`).then(res => res.json())
-  if (!response.isAvailable) {
-    return { state: "invalid", message: "Email is already in use." }
-  }
-
-  return { state: "valid", message: "Email is available." }
-})
-
-emailInput.addEventListener("input", () => {
-  validator.reset()
-  validator.validate("input")
-})
-
-const message = document.getElementById("message")
-
-validator.addEventListener("validation", (event) => {
-  message.innerHTML = event.detail.message
+passwordInput.addEventListener("input", () => {
+  const passwordValidators = fixtureStore.getValidators("password")
+  resetAll(passwordValidators)
+  validateAll(passwordValidators, "input")
 })
 ```
 
-What changed in this example:
+or validators from a validator hub:
 
-- **Delay**: A debounce delay of 500ms is introduced before the server request to give the user time to stop typing.
+```typescript
+import { validateAll } from "pova"
 
-- **Early exit**: If the user inputs during the delay, the controller signal will be aborted, allowing the plugin to exit early and skip the server request.
+form.addEventListener("blur", (event) => {
+  const allValidators = validatorHub.getAllValidators()
+  validateAll(allValidators, "blur")
+})
+```
 
-## Conclusion
+### 7. Handle validation events
 
-`pova` offers a flexible, framework-agnostic approach to form validation, allowing you to implement custom validation pipelines that fit the needs of your application. Whether you need simple field validation, complex multi-field checks, or debounced server requests, `pova` gives you complete control over how you want your validation to be.
+Handle [validation results](docs/faq.md#validation-result) emitted by a validator:
 
-Ready to get started? Check out the [**Quick Start**](#quick-start) section above to see how to integrate `pova` into your project. If you have any questions or need further assistance, feel free to open an issue on the [issues page](https://github.com/davidxhk/pova/issues).
+```typescript
+usernameValidator.addEventListener("validation", (event) => {
+  const { state, message } = event.detail ?? {}
+  usernameMessage.innerHTML = message || ""
+  switch (state) {
+    case "invalid":
+      usernameInput.style.borderColor = "red"
+      break
+    case "valid":
+      usernameInput.style.borderColor = "green"
+      break
+    default:
+      usernameInput.style.borderColor = "initial"
+      break
+  }
+})
+```
+
+or [validator events](docs/faq.md#validator-event) emitted by a validator hub:
+
+```typescript
+validatorHub.addEventListener("validation", (event) => {
+  const { name, type } = event.detail
+  switch (type) {
+    case "create":
+      console.log(`Validator ${name} was created`)
+      break
+    case "remove":
+      console.log(`Validator ${name} was removed`)
+      break
+    case "result":
+      console.log(`Validator ${name} emitted a result: ${event.detail.result}`)
+      break
+  }
+})
+```
+
+## Learn More
+
+### Examples
+
+[Server-side email validation](docs/examples/01-server-side-email-validation.md)\
+See how to combine server-side checks and debouncing for a smooth email validation experience.
+
+### Frequently Asked Questions
+
+Explore common questions in the [FAQ](docs/faq.md).
+
+> [!WARNING]
+>
+> Malicious users can always bypass client-side checks. Remember to **validate data on the server side** as well.
