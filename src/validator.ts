@@ -65,7 +65,7 @@ export class Validator extends EventTarget {
 
   constructor(fixtures: { [key: string]: any } = {}, plugins: ValidationPlugin[] = []) {
     super()
-    this[$proxy] = createReadonlyProxy(this, "result", "hasFixture", "findFixture", "getFixture", "getFixtureValue", "dispatchResult")
+    this[$proxy] = createReadonlyProxy(this, ["result", "hasFixture", "findFixture", "getFixture", "getFixtureValue", "dispatchResult"])
     this[$fixtures] = fixtures
     this[$plugins] = plugins
     this[$promise] = null
