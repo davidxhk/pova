@@ -1,15 +1,15 @@
-import type { AbortablePromise, ClassType, PrimitiveType, PrimitiveTypes, ValidationPlugin, ValidationResult } from "./types"
+import type { AbortablePromise, FixtureStore, ValidationPlugin, ValidationResult } from "./types"
 import { $fixtures, $plugins, $promise, $result } from "./symbols"
-import { createReadonlyProxy, createValidatorProxy, handleValidationError, isType, resolveValidationPlugin } from "./utils"
+import { createReadonlyProxy, createValidatorProxy, handleValidationError, resolveValidationPlugin } from "./utils"
 import { ValidationSource } from "./validation-source"
 
 export class Validator extends ValidationSource<ValidationResult | null> {
-  readonly [$fixtures]: { [key: PropertyKey]: any }
+  readonly [$fixtures]: FixtureStore
   readonly [$plugins]: ValidationPlugin[]
   [$promise]: AbortablePromise<ValidationResult | void> | null
   [$result]: ValidationResult | null
 
-  constructor(fixtures: { [key: string]: any } = {}) {
+  constructor(fixtures: FixtureStore) {
     super()
     this[$fixtures] = fixtures
     this[$plugins] = []
@@ -23,83 +23,6 @@ export class Validator extends ValidationSource<ValidationResult | null> {
     }
 
     return createReadonlyProxy(this[$result])
-  }
-
-  addFixture(fixture: any, name: PropertyKey = fixture?.name): void {
-    if (!name) {
-      throw new Error("Fixture must have a name")
-    }
-    if (this.hasFixture(name)) {
-      throw new Error(`Fixture '${name.toString()}' already exists`)
-    }
-    this[$fixtures][name] = fixture
-  }
-
-  hasFixture(name: PropertyKey): boolean {
-    return name in this[$fixtures]
-  }
-
-  findFixture(name: PropertyKey): any | undefined {
-    if (this.hasFixture(name)) {
-      return this[$fixtures][name]
-    }
-  }
-
-  getFixture(name: PropertyKey): any
-  getFixture<P extends PrimitiveType>(name: PropertyKey, options: { type: P }): PrimitiveTypes[P]
-  getFixture<T>(name: PropertyKey, options: { type: ClassType<T> }): T
-  getFixture(name: PropertyKey, options?: { type?: any }): any {
-    const { type } = options || {}
-    if (!this.hasFixture(name)) {
-      throw new Error(`Fixture '${name.toString()}' not found`)
-    }
-    const fixture = this[$fixtures][name]
-    if (type && !isType(fixture, type)) {
-      switch (typeof type) {
-        case "string":
-          throw new TypeError(`Fixture '${name.toString()}' is not type ${type}`)
-        case "function":
-          throw new TypeError(`Fixture '${name.toString()}' is not an instance of ${type.name}`)
-      }
-    }
-    return fixture
-  }
-
-  getFixtureValue(name: PropertyKey, options?: { key?: string }): any
-  getFixtureValue<P extends PrimitiveType>(name: PropertyKey, options: { key?: string, type: P }): PrimitiveTypes[P]
-  getFixtureValue<T>(name: PropertyKey, options: { key?: string, type: ClassType<T> }): T
-  getFixtureValue(name: PropertyKey, options?: { key?: string, type?: any }): any {
-    const { key = "value", type } = options || {}
-    const fixture = this.getFixture(name)
-    if (!(key in fixture)) {
-      throw new Error(`Fixture '${name.toString()}' is missing a ${key}`)
-    }
-    const value = fixture[key]
-    if (type && !isType(value, type)) {
-      switch (typeof type) {
-        case "string":
-          throw new TypeError(`Fixture '${name.toString()}' ${key} is not type ${type}`)
-        case "function":
-          throw new TypeError(`Fixture '${name.toString()}' ${key} is not an instance of ${type.name}`)
-      }
-    }
-    return value
-  }
-
-  removeFixture(name: PropertyKey): boolean
-  removeFixture(fixture: any): boolean
-  removeFixture(value: any): boolean {
-    let name: PropertyKey | undefined
-    if (!["string", "number", "symbol"].includes(typeof value)) {
-      name = Object.keys(this[$fixtures]).find(name => this[$fixtures][name] === value)
-    }
-    else if (this.hasFixture(value)) {
-      name = value
-    }
-    if (name === undefined) {
-      return false
-    }
-    return delete this[$fixtures][name]
   }
 
   addPlugin(plugin: ValidationPlugin): void {
