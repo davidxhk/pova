@@ -29,9 +29,7 @@ describe("class Validator", () => {
     })
 
     it("initializes with an empty result and a null promise", () => {
-      // @ts-expect-error internal property not supported yet
       expect(validator.result).toMatchObject(EMPTY_RESULT)
-      // @ts-expect-error internal property not supported yet
       expect(validator.promise).toBeNull()
     })
   })
@@ -121,7 +119,6 @@ describe("class Validator", () => {
 
       validator.setResult(result)
 
-      // @ts-expect-error internal property not supported yet
       expect(validator.result).toBe(result)
       expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: result }))
     })
@@ -141,7 +138,6 @@ describe("class Validator", () => {
     it("aborts any currently running plugin", async () => {
       validator.addPlugin(() => new Promise(resolve => setTimeout(resolve, 10)))
       validator.validate()
-      // @ts-expect-error internal property not supported yet
       const signal = validator.promise!.signal
 
       validator.validate()
@@ -155,7 +151,6 @@ describe("class Validator", () => {
 
       validator.validate("test", { resetOnStart: true })
 
-      // @ts-expect-error internal property not supported yet
       expect(validator.result).toMatchObject(EMPTY_RESULT)
       expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: EMPTY_RESULT }))
     })
@@ -174,7 +169,6 @@ describe("class Validator", () => {
 
       validator.validate()
 
-      // @ts-expect-error internal property not supported yet
       expect(validator.promise).toStrictEqual(expect.any(AbortablePromise))
     })
 
@@ -260,7 +254,6 @@ describe("class Validator", () => {
       const result = await validator.validate()
 
       expect(result).toMatchObject({ state: "sixth", message: "" })
-      // @ts-expect-error internal property not supported yet
       expect(validator.result).toBe(result)
       expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: result }))
     })
@@ -268,8 +261,8 @@ describe("class Validator", () => {
     it("returns a result with an aborted state when a plugin is aborted", async () => {
       validator.addPlugin(() => new Promise(resolve => setTimeout(resolve, 10)))
       const validation = validator.validate()
-
       validator.validate()
+
       const result = await validation
 
       expect(result).toMatchObject({ state: "aborted" })

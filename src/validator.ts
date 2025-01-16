@@ -22,10 +22,7 @@ export interface ValidationOptions {
   resetOnStart?: boolean
 }
 
-export const EMPTY_RESULT: Readonly<ValidationResult> = {
-  state: "",
-  message: "",
-}
+export const EMPTY_RESULT = Object.freeze<ValidationResult>({ state: "", message: "" })
 
 export type ValidationEvent = CustomEvent<ValidationResult>
 
@@ -62,14 +59,14 @@ export interface Validator {
 export class Validator extends EventTarget {
   readonly fixtures: ValidationFixture[]
   readonly plugins: ValidationPlugin[]
-  private result: ValidationResult
-  private promise: AbortablePromise<ValidationResult | void> | null
+  result: ValidationResult
+  promise: AbortablePromise<ValidationResult | void> | null
 
   constructor(fixtures?: ValidationFixture[], plugins?: ValidationPlugin[]) {
     super()
     this.fixtures = fixtures || []
     this.plugins = plugins || []
-    this.result = { ...EMPTY_RESULT }
+    this.result = EMPTY_RESULT
     this.promise = null
   }
 
@@ -126,10 +123,10 @@ export class Validator extends EventTarget {
       this.promise.abort(`${trigger} revalidation`)
     }
     if (options?.resetOnStart) {
-      this.setResult({ ...EMPTY_RESULT })
+      this.setResult(EMPTY_RESULT)
     }
 
-    let result: ValidationResult = { ...this.result }
+    let result = this.result
     for (const plugin of this.plugins) {
       try {
         const controller = new AbortController()
