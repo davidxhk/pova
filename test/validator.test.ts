@@ -147,16 +147,6 @@ describe("class Validator", () => {
   })
 
   describe("async validate", () => {
-    it("exits before running any plugins if the last state is 'pending' and exitOnPending is true", () => {
-      validator.setResult({ state: "pending", message: "" })
-      const plugin = vi.fn(() => {})
-      validator.addPlugin(plugin)
-
-      validator.validate("test", { exitOnPending: true })
-
-      expect(plugin).not.toHaveBeenCalled()
-    })
-
     it("aborts any currently running plugin", async () => {
       validator.addPlugin(() => new Promise(resolve => setTimeout(resolve, 10)))
       validator.validate()
@@ -165,16 +155,6 @@ describe("class Validator", () => {
       validator.validate()
 
       expect(signal.aborted).toBe(true)
-    })
-
-    it("dispatches an empty result before running any plugins if resetOnStart is true", () => {
-      const listener = vi.fn()
-      validator.addEventListener("validation", listener)
-
-      validator.validate("test", { resetOnStart: true })
-
-      expect(validator.result).toMatchObject(EMPTY_RESULT)
-      expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: EMPTY_RESULT }))
     })
 
     it("resolves all plugins sequentially", async () => {

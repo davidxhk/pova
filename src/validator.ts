@@ -17,11 +17,6 @@ export interface ValidationResult {
   message: string
 }
 
-export interface ValidationOptions {
-  exitOnPending?: boolean
-  resetOnStart?: boolean
-}
-
 export const EMPTY_RESULT = Object.freeze<ValidationResult>({ state: "", message: "" })
 
 export type ValidationEvent = CustomEvent<ValidationResult>
@@ -120,18 +115,9 @@ export class Validator extends EventTarget {
     this.setResult(EMPTY_RESULT)
   }
 
-  async validate(
-    trigger: string = "",
-    options?: ValidationOptions,
-  ): Promise<ValidationResult> {
-    if (options?.exitOnPending && this.result.state === "pending") {
-      return this.result
-    }
+  async validate(trigger: string = ""): Promise<ValidationResult> {
     if (this.promise) {
       this.promise.abort(`${trigger} revalidation`)
-    }
-    if (options?.resetOnStart) {
-      this.setResult(EMPTY_RESULT)
     }
 
     let result = this.result
