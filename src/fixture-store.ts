@@ -1,6 +1,7 @@
-import type { ClassType, NonEmptyArray, PrimitiveType, PrimitiveTypes, Validator } from "./types"
+import type { AnyType, AnyValue, NonEmptyArray } from "tstk"
+import type { Validator } from "./types"
+import { assert, is, propertyKey } from "tstk"
 import { $fixtures, $validators } from "./symbols"
-import { isPropertyKey, isType } from "./utils"
 
 export class FixtureStore {
   readonly [$fixtures]: { [name: PropertyKey]: any }
@@ -45,45 +46,31 @@ export class FixtureStore {
   }
 
   getFixture(name: PropertyKey): any
-  getFixture<P extends PrimitiveType>(name: PropertyKey, options: { type: P }): PrimitiveTypes[P]
-  getFixture<T>(name: PropertyKey, options: { type: ClassType<T> }): T
-  getFixture(name: PropertyKey, { type }: { type?: any } = {}): any {
+  getFixture<T extends AnyType>(name: PropertyKey, options: { type: T }): AnyValue<T>
+  getFixture(name: PropertyKey, { type }: { type?: AnyType } = {}): any {
     if (!this.hasFixture(name)) {
       throw new Error(`Fixture '${name.toString()}' not found`)
     }
 
     const fixture = this[$fixtures][name]
-    if (type && !isType(fixture, type)) {
-      switch (typeof type) {
-        case "string":
-          throw new TypeError(`Fixture '${name.toString()}' is not type ${type}`)
-
-        case "function":
-          throw new TypeError(`Fixture '${name.toString()}' is not an instance of ${type.name}`)
-      }
+    if (type) {
+      assert(fixture, type, `Fixture '${name.toString()}' is not type ${type}`)
     }
 
     return fixture
   }
 
   getFixtureValue(name: PropertyKey, options?: { key?: string }): any
-  getFixtureValue<P extends PrimitiveType>(name: PropertyKey, options: { key?: string, type: P }): PrimitiveTypes[P]
-  getFixtureValue<T>(name: PropertyKey, options: { key?: string, type: ClassType<T> }): T
-  getFixtureValue(name: PropertyKey, { key = "value", type }: { key?: string, type?: any } = {}): any {
+  getFixtureValue<T extends AnyType>(name: PropertyKey, options: { key?: string, type: T }): AnyValue<T>
+  getFixtureValue(name: PropertyKey, { key = "value", type }: { key?: string, type?: AnyType } = {}): any {
     const fixture = this.getFixture(name)
     if (!(key in fixture)) {
       throw new Error(`Fixture '${name.toString()}' is missing a ${key}`)
     }
 
     const value = fixture[key]
-    if (type && !isType(value, type)) {
-      switch (typeof type) {
-        case "string":
-          throw new TypeError(`Fixture '${name.toString()}' ${key} is not type ${type}`)
-
-        case "function":
-          throw new TypeError(`Fixture '${name.toString()}' ${key} is not an instance of ${type.name}`)
-      }
+    if (type) {
+      assert(value, type, `Fixture '${name.toString()}' ${key} is not type ${type}`)
     }
 
     return value
@@ -114,7 +101,7 @@ export class FixtureStore {
   removeFixture(value: any): boolean {
     let name: PropertyKey | undefined
 
-    if (!isPropertyKey(value)) {
+    if (!is(value, propertyKey)) {
       name = Reflect.ownKeys(this[$fixtures]).find(name => this[$fixtures][name] === value)
     }
 

@@ -1,6 +1,8 @@
-import type { AbortablePromise, AnyPluginConfig, DefaultPluginConfig, FixtureStore, Merge, PartialFactoryProps, PluginConfig, PluginRegistry, PluginRegistryLike, RegistryPluginConfig, ValidationPlugin, ValidationResult } from "./types"
+import type { Merge } from "tstk"
+import type { AbortablePromise, AnyPluginConfig, DefaultPluginConfig, FixtureStore, PartialFactoryProps, PluginConfig, PluginRegistry, PluginRegistryLike, ValidationPlugin, ValidationResult } from "./types"
+import { merge } from "tstk"
 import { $fixtures, $plugins, $promise, $props, $result } from "./symbols"
-import { createFixturesProxy, createReadonlyProxy, createValidationPlugin, createValidatorProxy, handleValidationError, mergeObjects, resolveValidationPlugin } from "./utils"
+import { createFixturesProxy, createReadonlyProxy, createValidationPlugin, createValidatorProxy, handleValidationError, resolveValidationPlugin } from "./utils"
 import { ValidationSource } from "./validation-source"
 
 export class Validator<P extends PartialFactoryProps = {}> extends ValidationSource<ValidationResult | null> {
@@ -20,9 +22,9 @@ export class Validator<P extends PartialFactoryProps = {}> extends ValidationSou
   }
 
   addPlugin(config: DefaultPluginConfig<P>): void
-  addPlugin<K extends keyof T, T extends PluginRegistryLike<T>>(config: RegistryPluginConfig<K, T, P>, registry: PluginRegistry<T>): void
+  addPlugin<K extends keyof T, T extends PluginRegistryLike<T>>(config: PluginConfig<K, T, P>, registry: PluginRegistry<T>): void
   addPlugin<K extends keyof T, T extends PluginRegistryLike<T>>(config: PluginConfig<K, T, P>, registry?: PluginRegistry<T>): void {
-    const mergedConfig = mergeObjects(this[$props], config) as PluginConfig<K, T>
+    const mergedConfig = merge(this[$props], config) as PluginConfig<K, T>
     this[$fixtures].addValidator(mergedConfig.fixture, this)
 
     const plugin = createValidationPlugin(mergedConfig, registry)
@@ -30,18 +32,11 @@ export class Validator<P extends PartialFactoryProps = {}> extends ValidationSou
   }
 
   addPlugins<T extends PluginRegistryLike<T>>(configs: AnyPluginConfig<T, P>[], registry: PluginRegistry<T>): void
-  addPlugins<T extends PluginRegistryLike<T>, P2 extends PartialFactoryProps>(configs: AnyPluginConfig<T, Merge<P, P2>>[], registry: PluginRegistry<T>, defaultProps: Readonly<P2>): void
-  addPlugins<T extends PluginRegistryLike<T>, P2 extends PartialFactoryProps = {}>(configs: AnyPluginConfig<T, Merge<P, P2>>[], registry: PluginRegistry<T>, defaultProps = {} as Readonly<P2>): void {
+  addPlugins<T extends PluginRegistryLike<T>, P2 extends PartialFactoryProps>(configs: AnyPluginConfig<T, Merge<[P, P2]>>[], registry: PluginRegistry<T>, defaultProps: Readonly<P2>): void
+  addPlugins<T extends PluginRegistryLike<T>, P2 extends PartialFactoryProps = {}>(configs: AnyPluginConfig<T, Merge<[P, P2]>>[], registry: PluginRegistry<T>, defaultProps = {} as Readonly<P2>): void {
     for (const config of configs) {
-      if (!config.type) {
-        const mergedConfig = mergeObjects(defaultProps, config) as DefaultPluginConfig<P>
-        this.addPlugin(mergedConfig)
-      }
-
-      else {
-        const mergedConfig = mergeObjects(defaultProps, config) as RegistryPluginConfig<keyof T, T, P>
-        this.addPlugin(mergedConfig, registry)
-      }
+      const mergedConfig = merge(defaultProps, config) as PluginConfig<keyof T, T, P>
+      this.addPlugin(mergedConfig, registry)
     }
   }
 

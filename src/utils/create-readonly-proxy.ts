@@ -1,12 +1,13 @@
-import type { NonEmptyArray } from "../types"
+import type { NonEmptyArray } from "tstk"
+import { assertHasProp, isType } from "tstk"
 
-export function createReadonlyProxy<T extends object>(target: T): Readonly<T>
-export function createReadonlyProxy<T extends object, K extends NonEmptyArray<keyof T>>(target: T, pick: Readonly<K>): Readonly<Pick<T, K[number]>>
-export function createReadonlyProxy<T extends object, K extends NonEmptyArray<keyof T>>(target: object, pick?: Readonly<K>): object {
+export function createReadonlyProxy<T extends object>(object: T): Readonly<T>
+export function createReadonlyProxy<T extends object, K extends NonEmptyArray<keyof T>>(object: T, pick: Readonly<K>): Readonly<Pick<T, K[number]>>
+export function createReadonlyProxy<T extends object, K extends NonEmptyArray<keyof T>>(object: object, pick?: Readonly<K>): object {
   const handler: ProxyHandler<T> = {
     get(target, prop) {
       const value = Reflect.get(target, prop)
-      return typeof value === "function" ? value.bind(target) : value
+      return isType(value, "function") ? value.bind(target) : value
     },
 
     set() {
@@ -20,11 +21,10 @@ export function createReadonlyProxy<T extends object, K extends NonEmptyArray<ke
 
   if (pick) {
     const pickedKeys = new Set(pick
-      .filter(key => Object.hasOwn(target, key))
-      .map(key => typeof key === "number"
-        ? key.toString()
-        : key as string | symbol,
-      ),
+      .map((key) => {
+        assertHasProp(object, key, "Key must exist in object")
+        return isType(key, "number") ? key.toString() : key as string | symbol
+      }),
     )
 
     handler.get = (target, prop) => {
@@ -33,7 +33,7 @@ export function createReadonlyProxy<T extends object, K extends NonEmptyArray<ke
       }
 
       const value = Reflect.get(target, prop)
-      return typeof value === "function" ? value.bind(target) : value
+      return isType(value, "function") ? value.bind(target) : value
     }
 
     handler.ownKeys = (target) => {
@@ -41,5 +41,5 @@ export function createReadonlyProxy<T extends object, K extends NonEmptyArray<ke
     }
   }
 
-  return new Proxy(target, handler)
+  return new Proxy(object, handler)
 }

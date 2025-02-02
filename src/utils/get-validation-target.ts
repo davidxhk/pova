@@ -1,11 +1,11 @@
-import type { PluginFactoryProps, ValidationTarget } from "../types"
+import type { ValidationTarget } from "../types"
+import { pickProps } from "tstk"
+import { assertIsValidationTarget } from "./assert-is-validation-target"
 
-export function getValidationTarget(props: PluginFactoryProps): ValidationTarget {
-  const { fixture, state, trigger } = props
+export function getValidationTarget(value: any): Readonly<ValidationTarget> {
+  assertIsValidationTarget(value)
 
-  if (!fixture) {
-    throw new Error("Target fixture must be provided")
-  }
+  const target = pickProps(value, ["fixture", "state", "trigger"])
 
-  return { fixture, state, trigger }
+  return Object.freeze(target)
 }

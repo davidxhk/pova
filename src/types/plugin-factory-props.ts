@@ -1,4 +1,4 @@
-import type { JSONValue } from "./json-value"
+import type { Json } from "tstk"
 
 export interface PluginFactoryProps {
   fixture: PropertyKey
@@ -6,5 +6,5 @@ export interface PluginFactoryProps {
   trigger?: string | string[]
   result: string
   message?: string
-  payload?: JSONValue
+  payload?: Json
 }

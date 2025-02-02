@@ -1,38 +1,38 @@
 import { describe, expect, it } from "vitest"
 import { createReadonlyProxy } from "../../src/utils"
 
-describe("function createReadonlyProxy", () => {
-  it("creates a readonly proxy for a given object", () => {
+describe("the createReadonlyProxy function", () => {
+  it("creates a readonly proxy for a target object", () => {
     const target = { a: 1, b: 2 }
     const proxy = createReadonlyProxy(target)
 
-    expect(proxy).toMatchObject(target)
+    expect(proxy).toEqual(target)
     expect(proxy).not.toBe(target)
   })
 
-  it("applies a given mask to the readonly proxy if one is provided", () => {
+  it("creates a readonly proxy that only contains the picked properties if pick is provided", () => {
     const target = { a: 1, b: 2 }
-    const proxy = createReadonlyProxy(target, "b")
+    const proxy = createReadonlyProxy(target, ["b"])
 
     const { a, ...expected } = target
-    expect(proxy).toMatchObject(expected)
+    expect(proxy).toEqual(expected)
   })
 
-  it("accepts symbols as keys for the mask", () => {
+  it("allows symbol keys to be picked", () => {
     const sym = Symbol("sym")
     const target = { a: 1, [sym]: 2 }
-    const proxy = createReadonlyProxy(target, sym)
+    const proxy = createReadonlyProxy(target, [sym])
 
     const { a, ...expected } = target
-    expect(proxy).toMatchObject(expected)
+    expect(proxy).toEqual(expected)
   })
 
-  it("accepts numbers as keys for the mask", () => {
+  it("allows number keys to be picked", () => {
     const target = { a: 1, 1: 2 }
-    const proxy = createReadonlyProxy(target, 1)
+    const proxy = createReadonlyProxy(target, [1])
 
     const { a, ...expected } = target
-    expect(proxy).toMatchObject(expected)
+    expect(proxy).toEqual(expected)
   })
 
   describe("the readonly proxy", () => {
@@ -40,6 +40,7 @@ describe("function createReadonlyProxy", () => {
       const target = { a: 1 }
       const proxy = createReadonlyProxy(target)
 
+      // @ts-expect-error proxy.a is readonly
       expect(() => (proxy.a = 2)).toThrowError(TypeError)
     })
 
@@ -47,47 +48,47 @@ describe("function createReadonlyProxy", () => {
       const target = { a: 1 }
       const proxy = createReadonlyProxy(target)
 
-      // @ts-expect-error a is not optional
+      // @ts-expect-error proxy.a is readonly
       expect(() => (delete proxy.a)).toThrowError(TypeError)
     })
 
-    it("allows read access to masked properties", () => {
+    it("allows read access to public properties of the target object", () => {
       const target = { a: 1, b: 2 }
-      const proxy = createReadonlyProxy(target, "b")
+      const proxy = createReadonlyProxy(target)
 
+      expect(proxy.a).toBe(target.a)
       expect(proxy.b).toBe(target.b)
     })
 
-    it("restricts read access to unmasked properties", () => {
-      const target = { a: 1, b: 2 }
-      const proxy = createReadonlyProxy(target, "b")
+    it("allows indirect access to private properties of the target object", () => {
+      const target = new class {
+        #a = 1
+        get a() { return this.#a }
+      }()
 
-      // @ts-expect-error "a" should not be in the proxy's type
-      expect(proxy.a).toBeUndefined()
+      const proxy = createReadonlyProxy(target)
+
+      expect(proxy.a).toBe(target.a)
     })
 
-    describe("binds methods of the target object", () => {
-      class TestClass {
-        _a = 1
-        #b = 2
-        get a() {
-          return this._a
-        }
+    it("allows read access only to the picked properties if pick is provided", () => {
+      const target = { a: 1, b: 2 }
+      const proxy = createReadonlyProxy(target, ["b"])
 
-        get b() {
-          return this.#b
-        }
+      // @ts-expect-error proxy.a does not exist
+      expect(proxy.a).toBeUndefined()
+      expect(proxy.b).toBe(target.b)
+    })
+
+    it("allows indirect access to unpicked properties if pick is provided", () => {
+      const target = {
+        _b: 1,
+        get b() { return this._b },
       }
-      const target = new TestClass()
-      const proxy = createReadonlyProxy(target, "a", "b")
 
-      it("allowing access to unmasked properties", () => {
-        expect(proxy.a).toBe(target.a)
-      })
+      const proxy = createReadonlyProxy(target, ["b"])
 
-      it("allowing access to private properties", () => {
-        expect(proxy.b).toBe(target.b)
-      })
+      expect(proxy.b).toBe(target._b)
     })
   })
 })

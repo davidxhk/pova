@@ -1,12 +1,13 @@
-import type { PluginConfig, PluginRegistry, PluginRegistryLike, ValidationPlugin } from "../types"
+import type { PluginConfig, PluginFactoryProps, PluginRegistry, PluginRegistryLike, ValidationPlugin } from "../types"
+import { isType, mapProps } from "tstk"
 import { checkPreconditions } from "./check-preconditions"
-import { getDefaultResult } from "./get-default-result"
 import { getFactoryPlugin } from "./get-factory-plugin"
+import { getValidationResult } from "./get-validation-result"
 import { getValidationTarget } from "./get-validation-target"
 
 export function createValidationPlugin<K extends keyof T, T extends PluginRegistryLike<T>>(config: PluginConfig<K, T>, registry?: PluginRegistry<T>): ValidationPlugin {
   const target = getValidationTarget(config)
-  const defaultResult = getDefaultResult(config)
+  const defaultResult = getValidationResult(mapProps(config as PluginFactoryProps, { result: "state" }))
   const plugin = getFactoryPlugin(config, registry)
 
   return async (props) => {
@@ -19,7 +20,7 @@ export function createValidationPlugin<K extends keyof T, T extends PluginRegist
       return
     }
 
-    if (typeof result === "boolean") {
+    if (isType(result, "boolean")) {
       result = defaultResult
     }
 

@@ -1,7 +1,7 @@
-import type { JSONValue } from "./json-value"
+import type { Json } from "tstk"
 
 export interface ValidationResult {
   state: string
   message?: string
-  payload?: JSONValue
+  payload?: Json
 }

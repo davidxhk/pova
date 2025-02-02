@@ -9,7 +9,8 @@
     "declaration": true,
     "outDir": "dist",
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noErrorTruncation": true
   },
   "include": ["src"],
   "exclude": ["**/*.test.ts"]
